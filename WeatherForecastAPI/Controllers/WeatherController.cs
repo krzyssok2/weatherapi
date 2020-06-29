@@ -3,8 +3,12 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using WeatherForecastAPI.Models;
+using Newtonsoft;
+using Newtonsoft.Json;
+using System.Xml;
 
 namespace WeatherForecastAPI.Controllers
 {
@@ -126,6 +130,44 @@ namespace WeatherForecastAPI.Controllers
                 }
             };
             return AllStdevs;
+        }
+
+        [HttpGet("city/{CityName}/provider/OWM")]
+        public ActionResult<OWMRootObject> FetchOWMCurrentData(string CityName)
+        {
+            string appId = "4bd458b0d9e2bfadbed92b6b73ce4274";
+            string url = string.Format("http://api.openweathermap.org/data/2.5/weather?q={0}&units=metric&cnt=1&APPID={1}", CityName, appId);
+            using (WebClient client = new WebClient())
+            {
+                string json = client.DownloadString(url);
+                OWMRootObject weatherinfo = JsonConvert.DeserializeObject<OWMRootObject>(json);
+                return weatherinfo;
+            }
+        }
+        [HttpGet("city/{CityName}/provider/METEO")]
+        public ActionResult<MeteoRootObject> FetchMETEOCurrentData(string CityName)
+        {
+            string url = string.Format("https://api.meteo.lt/v1/places/{0}/forecasts/long-term", CityName);
+            using (WebClient client = new WebClient())
+            {
+                string json = client.DownloadString(url);
+                MeteoRootObject weatherinfo = JsonConvert.DeserializeObject<MeteoRootObject>(json);
+                return weatherinfo;
+            }
+        }
+        [HttpGet("city/{CityName}/provider/BBC")]
+        public string FetchBBCCurrentData(string CityName)
+        {
+            string url = string.Format("https://weather-broker-cdn.api.bbci.co.uk/en/forecast/rss/3day/593116");
+            using (WebClient client = new WebClient())
+            {
+                string xml = client.DownloadString(url);
+                XmlDocument doc = new XmlDocument();
+                doc.LoadXml(xml);
+                string json = JsonConvert.SerializeXmlNode(doc);
+                MeteoRootObject weatherinfo = JsonConvert.DeserializeObject<MeteoRootObject>(json);
+                return json;
+            }
         }
     }
 }

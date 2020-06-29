@@ -11,6 +11,9 @@ namespace WeatherForecastAPI.Controllers
     [Route("api/[controller]")]
     public class CitiesController : ControllerBase
     {
+        /// <summary>
+        /// Gets All cities
+        /// </summary>
         [HttpGet("")]
         public ActionResult<CitiesResponseModel> GetAllCities()
         {
