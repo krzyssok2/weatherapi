@@ -156,7 +156,7 @@ namespace WeatherForecastAPI.Controllers
             }
         }
         [HttpGet("city/{CityName}/provider/BBC")]
-        public string FetchBBCCurrentData(string CityName)
+        public ActionResult<BBCRootObject> FetchBBCCurrentData(string CityName)
         {
             string url = string.Format("https://weather-broker-cdn.api.bbci.co.uk/en/forecast/rss/3day/593116");
             using (WebClient client = new WebClient())
@@ -165,8 +165,9 @@ namespace WeatherForecastAPI.Controllers
                 XmlDocument doc = new XmlDocument();
                 doc.LoadXml(xml);
                 string json = JsonConvert.SerializeXmlNode(doc);
-                MeteoRootObject weatherinfo = JsonConvert.DeserializeObject<MeteoRootObject>(json);
-                return json;
+                
+                BBCRootObject weatherinfo = JsonConvert.DeserializeObject<BBCRootObject>(json);
+                return weatherinfo;
             }
         }
     }

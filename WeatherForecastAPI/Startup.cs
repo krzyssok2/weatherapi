@@ -72,7 +72,12 @@ namespace WeatherForecastAPI
                     "<a href='/api/Users'>Go to Users</a>" +
                     "<p></p>" +
                     "<a href='/swagger'>Go to Swagger</a>" +
-                    "<p style=\"color:#808000;\">============================================</p>");
+                    "<p style=\"color:#808000;\">============================================</p>"+
+                    "<a href='/api/weather/city/vilnius/provider/METEO'>Vilnius test METEO</a>" +
+                    "<p></p>" +
+                    "<a href='/api/weather/city/vilnius/provider/OWM'>Vilnius test OWM</a>" +
+                    "<p></p>" +
+                    "<a href='/api/weather/city/vilnius/provider/BBC'>Vilnius test BBC</a>");
                 await next();
             });
         }
