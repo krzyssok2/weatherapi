@@ -15,14 +15,22 @@ namespace WeatherForecastAPI.Controllers
     [Route("api/[controller]")]
     public class WeatherController: ControllerBase
     {
-        [HttpGet("average/temperature/{Country}/{City}")]
-        public ActionResult<WeatherCityAverage> GetCityAverage(string Country, string City)
+        /// <summary>
+        /// Get City average
+        /// </summary>
+        /// <param name="CityId"></param>
+        /// <param name="AverageFrom">Which average to calculate</param>
+        /// <param name="FromDate"></param>
+        /// <param name="ToDate"></param>
+        /// <returns></returns>
+        [HttpGet("average/{CityId}")]
+        public ActionResult<WeatherCityAverage> GetCityAverage(long CityId,string AverageFromWhat, string FromDate, string ToDate)
         {
             Random random = new Random();
             WeatherCityAverage CityAverage = new WeatherCityAverage
             {
-                CityName = Country,
-                Country = City,
+                CityName = "Vilnius",
+                Country = "Lithuania",
                 Average = random.NextDouble() * 36
             };
             return CityAverage;
@@ -72,8 +80,16 @@ namespace WeatherForecastAPI.Controllers
         //    return AllAverages;
         //}
         #endregion
-        [HttpGet("stdev/temperature/{Country}/{City}")]
-        public ActionResult<AllStdevs> GetAllStdevsFrom(string Country,string City)
+        /// <summary>
+        /// Get stdev of the city
+        /// </summary>
+        /// <param name="CityId"></param>
+        /// <param name="AverageFrom">Stdevs and factual temperature from</param>
+        /// <param name="FromDate"></param>
+        /// <param name="ToDate"></param>
+        /// <returns></returns>
+        [HttpGet("stdev/{CityId}")]
+        public ActionResult<AllStdevs> GetAllStdevsFrom(long CityId, string FromWhat, string FromDate,string ToDate)
         {
             AllStdevs AllStdevs = new AllStdevs
             {
@@ -81,8 +97,8 @@ namespace WeatherForecastAPI.Controllers
                 {
                     new Stdevs
                     {
-                        City=City,
-                        Country=Country,
+                        City="kaunas",
+                        Country="lithuania",
                         Provider="Meteo",
                         StdevsDataByDay= new List<StdevsFactualAndAverage>
                         {
@@ -102,8 +118,8 @@ namespace WeatherForecastAPI.Controllers
                     },
                     new Stdevs
                     {
-                        City=City,
-                        Country=Country,
+                        City="vilnius",
+                        Country="lithuania",
                         Provider="BBC",
                         StdevsDataByDay= new List<StdevsFactualAndAverage>
                         {
