@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,112 +20,81 @@ namespace WeatherForecastAPI.Controllers
                 {
                     new UserAccount
                     {
+                        Username="A",
                         UserId = 1,
-                        UserSettings = new UsersSettings
-                        {
-                            PreferanceC = true,
-                            PrefferedCities = new List<PrefferedCities>
-                            {
-                                new PrefferedCities
-                                {
-                                    CityName="vilnius",
-                                    Country="lithuania"
-                                },
-                                new PrefferedCities
-                                {
-                                    CityName="kaunas",
-                                    Country="lithuania"
-                                },
-                                new PrefferedCities
-                                {
-                                    CityName="alytus",
-                                    Country="lithuania"
-                                }
-                            }
-                        }
                     },
                     new UserAccount
                     {
+                        Username="B",
                         UserId = 2,
-                        UserSettings = new UsersSettings
-                        {
-                            PreferanceC = true,
-                            PrefferedCities = new List<PrefferedCities>
-                            {
-                                new PrefferedCities
-                                {
-                                    CityName="vilnius",
-                                    Country="lithuania"
-                                },
-                                new PrefferedCities
-                                {
-                                    CityName="alytus",
-                                    Country="lithuania"
-                                }
-                            }
-                        }
                     }
                 }
             };
             return Allusers;
         }
-        [HttpGet("{UserId}")]
-        public ActionResult<UserAccount> GetSettingsByUser(long userid)
+        [HttpGet("{UserId}/settings/unit")]
+        public ActionResult<PreferedTemperature> GettingPreferedUnit(long userid)
         {
-            UserAccount User = new UserAccount
+            PreferedTemperature preferedTemperature = new PreferedTemperature
             {
-                UserId = userid,
-                UserSettings = new UsersSettings
+                PrefferedUnit = Temperature.C
+            };
+            return preferedTemperature;
+        }
+        [HttpPut("{UserId}/settings/unit")]
+        public ActionResult<PreferedTemperature> PutPreferedUnit(long userid)
+        {
+            PreferedTemperature preferedTemperature = new PreferedTemperature
+            {
+                PrefferedUnit = Temperature.F
+            };
+            return preferedTemperature;
+        }
+        [HttpGet("{UserId}/settings/favoritecities")]
+        public ActionResult<List<PrefferedCities>> GettingFavoriteCities(long userid)
+        {
+            List<PrefferedCities> prefferedCities = new List<PrefferedCities>
+            {
+                new PrefferedCities
                 {
-                    PreferanceC = true,
-                    PrefferedCities = new List<PrefferedCities>
-                    {
-                        new PrefferedCities
-                        {
-                            CityName="vilnius",
-                            Country="lithuania"
-                        },
-                        new PrefferedCities
-                        {
-                            CityName="kaunas",
-                            Country="lithuania"
-                        },
-                        new PrefferedCities
-                        {
-                            CityName="alytus",
-                            Country="lithuania"
-                        }
-                    }
+                    CityName="Vilnius",
+                    Country="lithuania"
+                },
+                new PrefferedCities
+                {
+                    CityName="Kaunas",
+                    Country="lithuania"
                 }
             };
-            return User;
+            return prefferedCities;
         }
-        [HttpGet("{UserId}/usersettings")]
-        public ActionResult<UsersSettings> GettingUserSettings(long userid)
+        [HttpPut("{UserId}/settings/favoritecities")]
+        public ActionResult<List<PrefferedCities>> PutPreferedCities(long userid)
         {
-            UsersSettings Usersetting = new UsersSettings
+            List<PrefferedCities> prefferedCities = new List<PrefferedCities>
             {
-                PreferanceC = true,
-                PrefferedCities = new List<PrefferedCities>
-                    {
-                        new PrefferedCities
-                        {
-                            CityName="vilnius",
-                            Country="lithuania"
-                        },
-                        new PrefferedCities
-                        {
-                            CityName="kaunas",
-                            Country="lithuania"
-                        },
-                        new PrefferedCities
-                        {
-                            CityName="alytus",
-                            Country="lithuania"
-                        }
-                    }
+                new PrefferedCities
+                {
+                    CityName="Vilnius",
+                    Country="lithuania"
+                },
+                new PrefferedCities
+                {
+                    CityName="Kaunas",
+                    Country="lithuania"
+                }
             };
-            return Usersetting;
+            return prefferedCities;
+        }
+        [HttpPost("")]
+        public ActionResult<UserAccount> PostNewUser()
+        {
+            UserAccount user = new UserAccount
+            {
+                Username="Who?",
+                UserId = 12512
+            };
+            return user;
         }
 
     }

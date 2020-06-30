@@ -15,16 +15,14 @@ namespace WeatherForecastAPI.Controllers
     [Route("api/[controller]")]
     public class WeatherController: ControllerBase
     {
-        [HttpGet("city/{CityName}/average/from/{FromDate}/to/{ToDate}")]
-        public ActionResult<WeatherCityAverage> GetCityAverage(string cityname,string fromdate,string todate)
+        [HttpGet("average/temperature/{Country}/{City}")]
+        public ActionResult<WeatherCityAverage> GetCityAverage(string Country, string City)
         {
             Random random = new Random();
             WeatherCityAverage CityAverage = new WeatherCityAverage
             {
-                CityName = cityname,
-                Country = "lithuania",
-                FromDate = fromdate,
-                ToDate= todate,
+                CityName = Country,
+                Country = City,
                 Average = random.NextDouble() * 36
             };
             return CityAverage;
@@ -74,8 +72,8 @@ namespace WeatherForecastAPI.Controllers
         //    return AllAverages;
         //}
         #endregion
-        [HttpGet("stdev/city/{CityName}/from/{FromDate}/to/{ToDate}")]
-        public ActionResult<AllStdevs> GetAllStdevsFrom(string CityName,string FromDate, string ToDate)
+        [HttpGet("stdev/temperature/{Country}/{City}")]
+        public ActionResult<AllStdevs> GetAllStdevsFrom(string Country,string City)
         {
             AllStdevs AllStdevs = new AllStdevs
             {
@@ -83,47 +81,43 @@ namespace WeatherForecastAPI.Controllers
                 {
                     new Stdevs
                     {
-                        City=CityName,
-                        Country="lituania",
+                        City=City,
+                        Country=Country,
                         Provider="Meteo",
-                        DateFrom=FromDate,
-                        DateTo=ToDate,
                         StdevsDataByDay= new List<StdevsFactualAndAverage>
                         {
                             new StdevsFactualAndAverage
                             {
                                 Date="2020-05-09",
-                                FactualTemperature=28,
-                                StdevTemperature=18
+                                Factual=28,
+                                Stdev=18
                             },
                             new StdevsFactualAndAverage
                             {
                                 Date="2020-05-10",
-                                FactualTemperature=32,
-                                StdevTemperature=26
+                                Factual=32,
+                                Stdev=26
                             }
                         }
                     },
                     new Stdevs
                     {
-                        City=CityName,
-                        Country="lituania",
+                        City=City,
+                        Country=Country,
                         Provider="BBC",
-                        DateFrom=FromDate,
-                        DateTo=ToDate,
                         StdevsDataByDay= new List<StdevsFactualAndAverage>
                         {
                             new StdevsFactualAndAverage
                             {
                                 Date="2020-05-10",
-                                FactualTemperature=28,
-                                StdevTemperature=18
+                                Factual=28,
+                                Stdev=18
                             },
                             new StdevsFactualAndAverage
                             {
                                 Date="2020-05-15",
-                                FactualTemperature=32,
-                                StdevTemperature=26
+                                Factual=32,
+                                Stdev=26
                             }
                         }
                     }
@@ -132,43 +126,46 @@ namespace WeatherForecastAPI.Controllers
             return AllStdevs;
         }
 
-        [HttpGet("city/{CityName}/provider/OWM")]
-        public ActionResult<OWMRootObject> FetchOWMCurrentData(string CityName)
-        {
-            string appId = "4bd458b0d9e2bfadbed92b6b73ce4274";
-            string url = string.Format("http://api.openweathermap.org/data/2.5/weather?q={0}&units=metric&cnt=1&APPID={1}", CityName, appId);
-            using (WebClient client = new WebClient())
-            {
-                string json = client.DownloadString(url);
-                OWMRootObject weatherinfo = JsonConvert.DeserializeObject<OWMRootObject>(json);
-                return weatherinfo;
-            }
-        }
-        [HttpGet("city/{CityName}/provider/METEO")]
-        public ActionResult<MeteoRootObject> FetchMETEOCurrentData(string CityName)
-        {
-            string url = string.Format("https://api.meteo.lt/v1/places/{0}/forecasts/long-term", CityName);
-            using (WebClient client = new WebClient())
-            {
-                string json = client.DownloadString(url);
-                MeteoRootObject weatherinfo = JsonConvert.DeserializeObject<MeteoRootObject>(json);
-                return weatherinfo;
-            }
-        }
-        [HttpGet("city/{CityName}/provider/BBC")]
-        public ActionResult<BBCRootObject> FetchBBCCurrentData(string CityName)
-        {
-            string url = string.Format("https://weather-broker-cdn.api.bbci.co.uk/en/forecast/rss/3day/593116");
-            using (WebClient client = new WebClient())
-            {
-                string xml = client.DownloadString(url);
-                XmlDocument doc = new XmlDocument();
-                doc.LoadXml(xml);
-                string json = JsonConvert.SerializeXmlNode(doc);
-                
-                BBCRootObject weatherinfo = JsonConvert.DeserializeObject<BBCRootObject>(json);
-                return weatherinfo;
-            }
-        }
+
+        #region Providers
+        //[HttpGet("city/{CityName}/provider/OWM")]
+        //public ActionResult<OWMRootObject> FetchOWMCurrentData(string CityName)
+        //{
+        //    string appId = "4bd458b0d9e2bfadbed92b6b73ce4274";
+        //    string url = string.Format("http://api.openweathermap.org/data/2.5/weather?q={0}&units=metric&cnt=1&APPID={1}", CityName, appId);
+        //    using (WebClient client = new WebClient())
+        //    {
+        //        string json = client.DownloadString(url);
+        //        OWMRootObject weatherinfo = JsonConvert.DeserializeObject<OWMRootObject>(json);
+        //        return weatherinfo;
+        //    }
+        //}
+        //[HttpGet("city/{CityName}/provider/METEO")]
+        //public ActionResult<MeteoRootObject> FetchMETEOCurrentData(string CityName)
+        //{
+        //    string url = string.Format("https://api.meteo.lt/v1/places/{0}/forecasts/long-term", CityName);
+        //    using (WebClient client = new WebClient())
+        //    {
+        //        string json = client.DownloadString(url);
+        //        MeteoRootObject weatherinfo = JsonConvert.DeserializeObject<MeteoRootObject>(json);
+        //        return weatherinfo;
+        //    }
+        //}
+        //[HttpGet("city/{CityName}/provider/BBC")]
+        //public ActionResult<BBCRootObject> FetchBBCCurrentData(string CityName)
+        //{
+        //    string url = string.Format("https://weather-broker-cdn.api.bbci.co.uk/en/forecast/rss/3day/593116");
+        //    using (WebClient client = new WebClient())
+        //    {
+        //        string xml = client.DownloadString(url);
+        //        XmlDocument doc = new XmlDocument();
+        //        doc.LoadXml(xml);
+        //        string json = JsonConvert.SerializeXmlNode(doc);
+
+        //        BBCRootObject weatherinfo = JsonConvert.DeserializeObject<BBCRootObject>(json);
+        //        return weatherinfo;
+        //    }
+        //}
+        #endregion
     }
 }

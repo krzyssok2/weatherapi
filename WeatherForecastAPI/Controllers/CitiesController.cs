@@ -23,21 +23,25 @@ namespace WeatherForecastAPI.Controllers
                  {
                      new CityInfoResponseModel
                      {
+                         CityId=1,
                          CityName = "vilnius",
                          Country ="lithuania"
                      },
                      new CityInfoResponseModel
                      {
+                         CityId=2,
                          CityName = "kaunas",
                          Country ="lithuania"
                      },
                      new CityInfoResponseModel
                      {
+                         CityId=3,
                          CityName = "alytus",
                          Country ="lithuania"
                      },
                      new CityInfoResponseModel
                      {
+                         CityId=4,
                          CityName = "palanga",
                          Country ="lithuania"
                      }
@@ -45,15 +49,27 @@ namespace WeatherForecastAPI.Controllers
             };
             return MyResponse;
         }
-        [HttpGet("{CityName}")]
-        public ActionResult<CityInfoResponseModel> GetSpecificCity(string cityName)
+        [HttpPost("")]
+        public ActionResult<CityInfoResponseModel> PostCity()
         {
-            CityInfoResponseModel MyCity = new CityInfoResponseModel
+            CityInfoResponseModel MyResponse = new CityInfoResponseModel
             {
-                CityName = cityName,
-                Country="lithuania"
+                CityId = 1,
+                CityName = "vilnius",
+                Country = "lithuania"
             };
-            return MyCity;
+            return Ok();
+        }
+        [HttpDelete("")]
+        public ActionResult<CityInfoResponseModel> DeleteCity()
+        {
+            CityInfoResponseModel MyResponse = new CityInfoResponseModel
+            {
+                CityId = 1,
+                CityName = "vilnius",
+                Country = "lithuania"
+            };
+            return Ok();
         }
     }
 }

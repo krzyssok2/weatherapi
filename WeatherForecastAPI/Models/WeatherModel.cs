@@ -12,8 +12,6 @@ namespace WeatherForecastAPI.Models
     {
         public string CityName { get; set; }
         public string Country { get; set; }
-        public string FromDate { get; set; }
-        public string ToDate { get; set; }
         public double Average { get; set; }
     }
     public class WeatherAllAverages
@@ -36,7 +34,7 @@ namespace WeatherForecastAPI.Models
     public class StdevsFactualAndAverage
     {
         public string Date { get; set; }
-        public double FactualTemperature { get; set; }
-        public double StdevTemperature { get; set; }
+        public double Factual { get; set; }
+        public double Stdev { get; set; }
     }
 }
