@@ -8,27 +8,45 @@ namespace WeatherForecastAPI.Models
     public class WeatherModel
     {
     }
+    public class WeatherRawForecasts
+    {
+        public long CityId { get; set; }
+        public string FromDate { get; set; }
+        public string ToDate { get; set; }
+        public List<ForecastProvider> ForecastsProvider{ get;set; }
+    }
+    public class ForecastProvider
+    {
+        public string Provider { get; set; }
+        List<RawData> Forcasts { get; set; }
+    }
+    public class RawData
+    {
+        public string Date { get; set; }
+        public double Temperature { get; set; }
+    }
     public class WeatherCityAverage
     {
-        public string CityName { get; set; }
-        public string Country { get; set; }
-        public double Average { get; set; }
+        public long CityId { get; set; }
+        public string FromDate { get; set; }
+        public string ToDate { get; set; }
+        public List<CityAverageByDay> CityAverageByDay { get; set; }
     }
-    public class WeatherAllAverages
+    public class CityAverageByDay
     {
-        public List<WeatherCityAverage> AllCitiesAverage { get; set; }
+        public string Date { get; set; }
+        public double Average { get; set; }
     }
     public class AllStdevs
     {
-        public List<Stdevs> allstevs { get; set; }
+        public string CityId { get; set; }
+        public string FromDate { get; set; }
+        public string ToDate { get; set; }
+        public List<StdevsProviders> StdevsProviders { get; set; }
     }
-    public class Stdevs
+    public class StdevsProviders
     {
         public string Provider { get; set; }
-        public string City { get; set; }
-        public string Country { get; set; }
-        public string DateFrom { get; set; }
-        public string DateTo { get; set; }
         public List<StdevsFactualAndAverage> StdevsDataByDay { get; set; }
     }
     public class StdevsFactualAndAverage

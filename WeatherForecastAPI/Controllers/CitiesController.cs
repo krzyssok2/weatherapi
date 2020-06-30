@@ -49,36 +49,5 @@ namespace WeatherForecastAPI.Controllers
             };
             return MyResponse;
         }
-        /// <summary>
-        /// Edit Existing city data
-        /// </summary>
-        /// <param name="CityId"></param>
-        /// <returns></returns>
-        [HttpPost("{CityId}")]
-        public ActionResult<CityInfoResponseModel> PostCity(string CityId)
-        {
-            CityInfoResponseModel MyResponse = new CityInfoResponseModel
-            {
-                CityId = 1,
-                CityName = "vilnius",
-                Country = "lithuania"
-            };
-            return Ok(MyResponse);
-        }
-        /// <summary>
-        /// Delete City
-        /// </summary>
-        /// <returns></returns>
-        [HttpDelete("{CityId}")]
-        public ActionResult<CityInfoResponseModel> DeleteCity()
-        {
-            CityInfoResponseModel MyResponse = new CityInfoResponseModel
-            {
-                CityId = 1,
-                CityName = "vilnius",
-                Country = "lithuania"
-            };
-            return Ok(MyResponse);
-        }
     }
 }

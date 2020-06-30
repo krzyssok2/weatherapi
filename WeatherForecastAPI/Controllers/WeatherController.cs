@@ -19,19 +19,29 @@ namespace WeatherForecastAPI.Controllers
         /// Get City average
         /// </summary>
         /// <param name="CityId"></param>
-        /// <param name="AverageFrom">Which average to calculate</param>
         /// <param name="FromDate"></param>
         /// <param name="ToDate"></param>
         /// <returns></returns>
         [HttpGet("average/{CityId}")]
-        public ActionResult<WeatherCityAverage> GetCityAverage(long CityId,string AverageFromWhat, string FromDate, string ToDate)
+        public ActionResult<WeatherCityAverage> GetCityAverage(long CityId, string FromDate, string ToDate)
         {
             Random random = new Random();
             WeatherCityAverage CityAverage = new WeatherCityAverage
             {
-                CityName = "Vilnius",
-                Country = "Lithuania",
-                Average = random.NextDouble() * 36
+                CityId=1,
+                CityAverageByDay= new List<CityAverageByDay>
+                {
+                    new CityAverageByDay
+                    {
+                        Date="",
+                        Average=5
+                    },
+                    new CityAverageByDay
+                    {
+                        Date="",
+                        Average=12
+                    }
+                }
             };
             return CityAverage;
         }
@@ -84,60 +94,24 @@ namespace WeatherForecastAPI.Controllers
         /// Get stdev of the city
         /// </summary>
         /// <param name="CityId"></param>
-        /// <param name="AverageFrom">Stdevs and factual temperature from</param>
         /// <param name="FromDate"></param>
         /// <param name="ToDate"></param>
         /// <returns></returns>
         [HttpGet("stdev/{CityId}")]
-        public ActionResult<AllStdevs> GetAllStdevsFrom(long CityId, string FromWhat, string FromDate,string ToDate)
+        public ActionResult<AllStdevs> GetAllStdevsFrom(long CityId, string FromDate,string ToDate)
         {
             AllStdevs AllStdevs = new AllStdevs
             {
-                allstevs = new List<Stdevs>
-                {
-                    new Stdevs
-                    {
-                        City="kaunas",
-                        Country="lithuania",
-                        Provider="Meteo",
-                        StdevsDataByDay= new List<StdevsFactualAndAverage>
-                        {
-                            new StdevsFactualAndAverage
-                            {
-                                Date="2020-05-09",
-                                Factual=28,
-                                Stdev=18
-                            },
-                            new StdevsFactualAndAverage
-                            {
-                                Date="2020-05-10",
-                                Factual=32,
-                                Stdev=26
-                            }
-                        }
-                    },
-                    new Stdevs
-                    {
-                        City="vilnius",
-                        Country="lithuania",
-                        Provider="BBC",
-                        StdevsDataByDay= new List<StdevsFactualAndAverage>
-                        {
-                            new StdevsFactualAndAverage
-                            {
-                                Date="2020-05-10",
-                                Factual=28,
-                                Stdev=18
-                            },
-                            new StdevsFactualAndAverage
-                            {
-                                Date="2020-05-15",
-                                Factual=32,
-                                Stdev=26
-                            }
-                        }
-                    }
-                }
+                
+            };
+            return AllStdevs;
+        }
+        [HttpGet("forecasts/{CityId}")]
+        public ActionResult<AllStdevs> GetAllForecasts(long CityId, string FromDate, string ToDate)
+        {
+            AllStdevs AllStdevs = new AllStdevs
+            {
+
             };
             return AllStdevs;
         }
