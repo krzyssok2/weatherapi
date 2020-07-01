@@ -15,5 +15,7 @@ namespace WeatherForecastAPI.Models
         public long CityId { get; set; }
         public string CityName { get;set; }
         public string Country { get; set; }
+        public DateTime FromDate { get; set; } 
+        public DateTime ToDate { get; set; }
     }
 }

@@ -23,7 +23,7 @@ namespace WeatherForecastAPI.Controllers
         /// <param name="ToDate"></param>
         /// <returns></returns>
         [HttpGet("average/{CityId}")]
-        public ActionResult<WeatherCityAverage> GetCityAverage(long CityId, string FromDate, string ToDate)
+        public ActionResult<WeatherCityAverage> GetCityAverage(long CityId, DateTime FromDate, DateTime ToDate)
         {
             Random random = new Random();
             WeatherCityAverage CityAverage = new WeatherCityAverage
@@ -98,22 +98,28 @@ namespace WeatherForecastAPI.Controllers
         /// <param name="ToDate"></param>
         /// <returns></returns>
         [HttpGet("stdev/{CityId}")]
-        public ActionResult<AllStdevs> GetAllStdevsFrom(long CityId, string FromDate,string ToDate)
+        public ActionResult<AllStdevs> GetAllStdevsFrom(long CityId, DateTime FromDate, DateTime ToDate)
         {
             AllStdevs AllStdevs = new AllStdevs
             {
                 
             };
             return AllStdevs;
-        }
+        }/// <summary>
+        /// Gets forecast for specific city
+        /// </summary>
+        /// <param name="CityId"></param>
+        /// <param name="FromDate"></param>
+        /// <param name="ToDate"></param>
+        /// <returns></returns>
         [HttpGet("forecasts/{CityId}")]
-        public ActionResult<AllStdevs> GetAllForecasts(long CityId, string FromDate, string ToDate)
+        public ActionResult<WeatherRawForecasts> GetAllForecasts(long CityId, DateTime FromDate, DateTime ToDate)
         {
-            AllStdevs AllStdevs = new AllStdevs
+            WeatherRawForecasts forecasts = new WeatherRawForecasts
             {
 
             };
-            return AllStdevs;
+            return forecasts;
         }
 
 

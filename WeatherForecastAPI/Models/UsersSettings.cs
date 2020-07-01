@@ -24,10 +24,10 @@ namespace WeatherForecastAPI.Models
     }
     public class UsersSettings
     {
-        public Temperature PrefferedUnit{ get;set; }
-        public List<PrefferedCities> FavoriteCities { get; set; }
+        public Temperature PreferedUnit{ get;set; }
+        public List<PreferedCities> FavoriteCities { get; set; }
     }
-    public class PrefferedCities
+    public class PreferedCities
     {
         public long CityId { get; set; }
         public string CityName { get; set; }

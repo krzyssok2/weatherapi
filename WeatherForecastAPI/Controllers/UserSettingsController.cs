@@ -76,15 +76,15 @@ namespace WeatherForecastAPI.Controllers
         /// <param name="userid"></param>
         /// <returns></returns>
         [HttpGet("favorite-cities")]
-        public ActionResult<List<PrefferedCities>> GettingFavoriteCities(long userid)
+        public ActionResult<List<PreferedCities>> GettingFavoriteCities(long userid)
         {
-            List<PrefferedCities> prefferedCities = new List<PrefferedCities>
+            List<PreferedCities> prefferedCities = new List<PreferedCities>
             {
-                new PrefferedCities
+                new PreferedCities
                 {
                     CityId=1
                 },
-                new PrefferedCities
+                new PreferedCities
                 {
                     CityId=2
                 }
@@ -97,15 +97,31 @@ namespace WeatherForecastAPI.Controllers
         /// <param name="userid"></param>
         /// <returns></returns>
         [HttpPut("favorite-cities")]
-        public ActionResult<List<PrefferedCities>> PutPreferedCities(long userid)
+        public ActionResult<List<PreferedCities>> PutPreferedCities(long userid)
         {
-            List<PrefferedCities> prefferedCities = new List<PrefferedCities>
+            List<PreferedCities> preferedCities = new List<PreferedCities>
             {
-                new PrefferedCities
+                new PreferedCities
                 {
                     CityId=1
                 },
-                new PrefferedCities
+                new PreferedCities
+                {
+                    CityId=2
+                }
+            };
+            return preferedCities;
+        }
+        [HttpDelete("favorite-cities/{CityId}")]
+        public ActionResult<List<PreferedCities>> DeletePreferedCity(long userid)
+        {
+            List<PreferedCities> prefferedCities = new List<PreferedCities>
+            {
+                new PreferedCities
+                {
+                    CityId=1
+                },
+                new PreferedCities
                 {
                     CityId=2
                 }
@@ -115,18 +131,18 @@ namespace WeatherForecastAPI.Controllers
         [HttpGet("")]
         public ActionResult<UsersSettings> GetAllSettings(long userid)
         {
-            UsersSettings prefferedCities = new UsersSettings
+            UsersSettings preferedCities = new UsersSettings
             {
-                PrefferedUnit=0,
-                FavoriteCities= new List<PrefferedCities>
+                PreferedUnit=0,
+                FavoriteCities= new List<PreferedCities>
                 {
-                    new PrefferedCities
+                    new PreferedCities
                     {
                         CityId=1
                     }
                 }
             };
-            return prefferedCities;
+            return preferedCities;
         }
 
     }
