@@ -20,12 +20,16 @@ namespace WeatherForecastAPI.Models
     {
         public string Username { get; set; }
         public long UserId { get; set; }
-        public UsersSettings UserSettings { get; set; }
+        public Settings UserSettings { get; set; }
     }
-    public class UsersSettings
+    public class Settings
     {
-        public Temperature PreferedUnit{ get;set; }
+        public Temperature PreferedUnit { get; set; }
         public List<PreferedCities> FavoriteCities { get; set; }
+    }
+    public class AllPreferedCities
+    {
+        public List<PreferedCities> PreferedCities { get; set; }
     }
     public class PreferedCities
     {

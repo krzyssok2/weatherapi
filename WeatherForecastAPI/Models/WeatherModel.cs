@@ -13,11 +13,17 @@ namespace WeatherForecastAPI.Models
         public long CityId { get; set; }
         public DateTime FromDate { get; set; }
         public DateTime ToDate { get; set; }
-        public List<ForecastProvider> ForecastsProvider{ get;set; }
+        public List<FactualTemperature> FactualTemperature { get;set;}
+        public List<ForecastProvider> Providers{ get;set; }
+    }
+    public class FactualTemperature
+    {
+        public DateTime Date { get; set; }
+        public double Temperature { get; set; }
     }
     public class ForecastProvider
     {
-        public string Provider { get; set; }
+        public string ProviderName { get; set; }
         public List<RawData> Forcasts { get; set; }
     }
     public class RawData
@@ -30,7 +36,7 @@ namespace WeatherForecastAPI.Models
         public long CityId { get; set; }
         public DateTime FromDate { get; set; }
         public DateTime ToDate { get; set; }
-        public List<CityAverageByDay> CityAverageByDay { get; set; }
+        public List<CityAverageByDay> Average { get; set; }
     }
     public class CityAverageByDay
     {
@@ -42,12 +48,12 @@ namespace WeatherForecastAPI.Models
         public string CityId { get; set; }
         public DateTime FromDate { get; set; }
         public DateTime ToDate { get; set; }
-        public List<StdevsProviders> StdevsProviders { get; set; }
+        public List<StdevsProviders> Providers { get; set; }
     }
     public class StdevsProviders
     {
-        public string Provider { get; set; }
-        public List<StdevsFactualAndAverage> StdevsDataByDay { get; set; }
+        public string ProviderName { get; set; }
+        public List<StdevsFactualAndAverage> Stdevs { get; set; }
     }
     public class StdevsFactualAndAverage
     {

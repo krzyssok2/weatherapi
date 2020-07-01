@@ -29,7 +29,7 @@ namespace WeatherForecastAPI.Controllers
             WeatherCityAverage CityAverage = new WeatherCityAverage
             {
                 CityId=1,
-                CityAverageByDay= new List<CityAverageByDay>
+                Average= new List<CityAverageByDay>
                 {
                     new CityAverageByDay
                     {
@@ -112,7 +112,7 @@ namespace WeatherForecastAPI.Controllers
         /// <param name="FromDate"></param>
         /// <param name="ToDate"></param>
         /// <returns></returns>
-        [HttpGet("forecasts/{CityId}")]
+        [HttpGet("{CityId}")]
         public ActionResult<WeatherRawForecasts> GetAllForecasts(long CityId, DateTime FromDate, DateTime ToDate)
         {
             WeatherRawForecasts forecasts = new WeatherRawForecasts

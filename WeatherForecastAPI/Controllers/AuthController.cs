@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
@@ -11,26 +12,27 @@ namespace WeatherForecastAPI.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        [HttpGet]
+        /// <summary>
+        /// Registration
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost("Registration")]
         public ActionResult<AuthAccount> GetUserAccountInfo()
         {
             AuthAccount UserAccount = new AuthAccount();
 
-            return UserAccount;
+            return Ok();
         }
-        [HttpPost]
-        public ActionResult<AuthAccount> CreateUserAccount()
+        /// <summary>
+        /// Login authentication
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost("Login")]
+        public ActionResult<AuthToken> CreateUserAccount()
         {
-            AuthAccount UserAccount = new AuthAccount();
+            AuthToken Token = new AuthToken();
 
-            return UserAccount;
-        }
-        [HttpPut]
-        public ActionResult<AuthAccount> UpdateUserAccount()
-        {
-            AuthAccount UserAccount = new AuthAccount();
-
-            return UserAccount;
+            return Token;
         }
     }
 }

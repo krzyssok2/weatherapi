@@ -10,4 +10,8 @@ namespace WeatherForecastAPI.Models
         public string Gmail { get; set; }
         public string Password { get; set; }
     }
+    public class AuthToken
+    {
+        public string Token { get; set; }
+    }
 }
