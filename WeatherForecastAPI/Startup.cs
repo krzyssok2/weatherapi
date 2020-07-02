@@ -30,6 +30,24 @@ namespace WeatherForecastAPI
             {
                 opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
+            services.AddHttpClient("OWM", c =>
+            {
+                c.BaseAddress = new Uri("http://api.openweathermap.org/data/2.5/");
+                //c.DefaultRequestHeaders.Add("");
+
+            });
+            services.AddHttpClient("METEO", c =>
+            {
+                c.BaseAddress = new Uri("https://api.meteo.lt/v1/");
+                //c.DefaultRequestHeaders.Add("");
+
+            });
+            services.AddHttpClient("BBC", c =>
+            {
+                c.BaseAddress = new Uri("https://weather-broker-cdn.api.bbci.co.uk/en/");
+                //c.DefaultRequestHeaders.Add("");
+
+            });
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
@@ -84,11 +102,11 @@ namespace WeatherForecastAPI
                     "<p></p>" +
                     "<a href='/swagger'>Go to Swagger</a>" +
                     "<p style=\"color:#808000;\">============================================</p>"+
-                    "<a href='/api/weather/city/vilnius/provider/METEO'>Vilnius test METEO</a>" +
+                    "<a href='/api/weather/test/METEO/vilnius'>Vilnius test METEO</a>" +
                     "<p></p>" +
-                    "<a href='/api/weather/city/vilnius/provider/OWM'>Vilnius test OWM</a>" +
+                    "<a href='/api/weather/test/OWM/vilnius'>Vilnius test OWM</a>" +
                     "<p></p>" +
-                    "<a href='/api/weather/city/vilnius/provider/BBC'>Vilnius test BBC</a>");
+                    "<a href='/api/weather/test/BBC/vilnius'>Vilnius test BBC</a>");
                 await next();
             });
         }

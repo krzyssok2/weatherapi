@@ -9,6 +9,7 @@ using WeatherForecastAPI.Models;
 using Newtonsoft;
 using Newtonsoft.Json;
 using System.Xml;
+using System.Net.Http;
 
 namespace WeatherForecastAPI.Controllers
 {
@@ -123,6 +124,63 @@ namespace WeatherForecastAPI.Controllers
         }
 
 
+
+
+        private IHttpClientFactory _httpClientFactory;
+        public WeatherController(IHttpClientFactory httpClientFactory)
+        {
+            _httpClientFactory = httpClientFactory;
+        }
+        [HttpGet("test/OWM/{CityId}")]
+        public async Task<ActionResult> GetTestOWM(string CityId)
+        {
+            OWMRootObject weatherinfo = await TestAsync<OWMRootObject>("OWM", string.Format("weather?q={0}&units=metric&APPID=4bd458b0d9e2bfadbed92b6b73ce4274", CityId), false);
+
+            return Ok(weatherinfo);
+        }
+        [HttpGet("test/METEO/{CityId}")]
+        public async Task<ActionResult> GetTestMETEO(string CityId)
+        {
+            MeteoRootObject weatherinfo = await TestAsync<MeteoRootObject>("METEO", string.Format("places/{0}/forecasts/long-term", CityId), false);
+            ForecastGeneralized forecastGeneralized = new ForecastGeneralized
+            {
+                Name = weatherinfo.place.name,
+                Provider="Meteo",
+                CreationDate = weatherinfo.forecastCreationTimeUtc,
+                Forecasts= new List<Forecasts>()
+            };
+            foreach (var x in weatherinfo.forecastTimestamps)
+            {
+                Forecasts item = new Forecasts
+                {
+                    ForecastTime = x.forecastTimeUtc,
+                    temperature = x.airTemperature
+                };
+                forecastGeneralized.Forecasts.Add(item);
+            }
+
+            return Ok(forecastGeneralized);
+        }
+        [HttpGet("test/BBC/{CityId}")]
+        public async Task<ActionResult> GetTestBBC(string CityId)
+        {
+            BBCRootObject weatherinfo = await TestAsync<BBCRootObject>("BBC", string.Format("forecast/rss/3day/593116", CityId), true);
+
+            return Ok(weatherinfo);
+        }
+        public async Task<T> TestAsync<T>(string provider, string path, bool IsXML)
+        {
+            var client = _httpClientFactory.CreateClient(provider);
+            var result = await client.GetStringAsync(path);
+            if(IsXML==true)
+            {
+                XmlDocument doc = new XmlDocument();
+                doc.LoadXml(result);
+                result = JsonConvert.SerializeXmlNode(doc);
+            }
+            T MyClass = JsonConvert.DeserializeObject<T>(result);
+            return MyClass;
+        }
         #region Providers
         //[HttpGet("city/{CityName}/provider/OWM")]
         //public ActionResult<OWMRootObject> FetchOWMCurrentData(string CityName)

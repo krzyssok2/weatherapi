@@ -8,17 +8,17 @@ namespace WeatherForecastAPI.Models
     public class MeteoRootObject
     {
         public Place place { get; set; }
-        public string forecastType {get;set;}
-        public string forecastCreationTimeUtc { get; set; }
+        //public string forecastType {get;set;}
+        public DateTime forecastCreationTimeUtc { get; set; }
         public List<ForecastTimestamps> forecastTimestamps { get; set; }
     }
     public class Place
     {
-        public string code { get; set; }
+        //public string code { get; set; }
         public string name { get; set; }
-        public string administrativeDivision { get; set; }
+        //public string administrativeDivision { get; set; }
         public string country { get; set; }
-        public string countryCode { get; set; }
+        //public string countryCode { get; set; }
         public Coordinates coordinates { get; set; }
 
     }
@@ -29,7 +29,7 @@ namespace WeatherForecastAPI.Models
     }
     public class ForecastTimestamps
     {
-        public string forecastTimeUtc { get; set; }
+        public DateTime forecastTimeUtc { get; set; }
         public double airTemperature { get; set; }
         public double windSpeed { get; set; }
         public double windGust { get; set; }
