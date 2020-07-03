@@ -10,6 +10,7 @@ using Newtonsoft;
 using Newtonsoft.Json;
 using System.Xml;
 using System.Net.Http;
+using System.Diagnostics;
 
 namespace WeatherForecastAPI.Controllers
 {
@@ -134,17 +135,33 @@ namespace WeatherForecastAPI.Controllers
         [HttpGet("test/OWM/{CityId}")]
         public async Task<ActionResult> GetTestOWM(string CityId)
         {
-            OWMRootObject weatherinfo = await TestAsync<OWMRootObject>("OWM", string.Format("weather?q={0}&units=metric&APPID=4bd458b0d9e2bfadbed92b6b73ce4274", CityId), false);
-
-            return Ok(weatherinfo);
+            OWMForecastRootObject weatherinfo = await TestAsync<OWMForecastRootObject>("OWM", string.Format("forecast?q={0}&units=metric&appid=4bd458b0d9e2bfadbed92b6b73ce4274", CityId), false);
+            ForecastGeneralized forecastGeneralized = new ForecastGeneralized
+            {
+                Name = weatherinfo.city.name.ToLower(),
+                CreationDate = Convert.ToDateTime(DateTime.Now.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss")),
+                Provider = "OWM",
+                Forecasts = new List<Forecasts>()
+            };
+            foreach (var x in weatherinfo.list)
+            {
+                Forecasts item = new Forecasts
+                {
+                    temperature = x.main.temp,
+                    ForecastTime = x.dt_txt
+                };
+                forecastGeneralized.Forecasts.Add(item);
+            }
+            return Ok(forecastGeneralized);
         }
         [HttpGet("test/METEO/{CityId}")]
         public async Task<ActionResult> GetTestMETEO(string CityId)
         {
             MeteoRootObject weatherinfo = await TestAsync<MeteoRootObject>("METEO", string.Format("places/{0}/forecasts/long-term", CityId), false);
+
             ForecastGeneralized forecastGeneralized = new ForecastGeneralized
             {
-                Name = weatherinfo.place.name,
+                Name = weatherinfo.place.name.ToLower(),
                 Provider="Meteo",
                 CreationDate = weatherinfo.forecastCreationTimeUtc,
                 Forecasts= new List<Forecasts>()
@@ -162,11 +179,36 @@ namespace WeatherForecastAPI.Controllers
             return Ok(forecastGeneralized);
         }
         [HttpGet("test/BBC/{CityId}")]
-        public async Task<ActionResult> GetTestBBC(string CityId)
+        public ActionResult GetTestBBC(string CityId)
         {
-            BBCRootObject weatherinfo = await TestAsync<BBCRootObject>("BBC", string.Format("forecast/rss/3day/593116", CityId), true);
+            using WebClient client = new WebClient();
+            string doc = client.DownloadString(Uri.EscapeUriString("https://www.bbc.com/weather/593116?day=1/application/json"));
+            doc = doc.Substring(doc.IndexOf("application/json"));
+            doc = doc.Substring(doc.IndexOf("{"));
+            doc = doc.Substring(0, doc.IndexOf("<"));
+            BBCScrapRootObject weatherinfo = JsonConvert.DeserializeObject<BBCScrapRootObject>(doc);
+            ForecastGeneralized forecastGeneralized = new ForecastGeneralized
+            {
+                Name = weatherinfo.data.location.name,
+                Provider = "BBC",
+                CreationDate = Convert.ToDateTime(DateTime.Now.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss")),
+                Forecasts = new List<Forecasts>()
+            };
+            foreach (var x in weatherinfo.data.forecasts)
+            {
+                foreach (var y in x.detailed.reports)
+                {
+                    Forecasts item = new Forecasts
+                    {
+                        ForecastTime = Convert.ToDateTime(Convert.ToString(y.localDate + "T" + y.timeslot)),
+                        temperature = y.temperatureC
+                    };
+                    forecastGeneralized.Forecasts.Add(item);
+                }
+            }
+            return Ok(forecastGeneralized);
 
-            return Ok(weatherinfo);
+
         }
         public async Task<T> TestAsync<T>(string provider, string path, bool IsXML)
         {

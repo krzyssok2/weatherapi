@@ -39,7 +39,7 @@ namespace WeatherForecastAPI.Models
     public class Item
     {
         //public string title { get; set; }
-        //public string link { get; set; }
+        public string link { get; set; }
         public string description { get; set; }
         public string pubDate { get; set; }
         //public Guid guid { get; set; }

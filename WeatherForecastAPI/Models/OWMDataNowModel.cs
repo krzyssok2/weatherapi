@@ -61,7 +61,7 @@ namespace WeatherForecastAPI.Models
         public int sunset { get; set; }
     }
 
-    public class OWMRootObject
+    public class OWMNowRootObject
     {
         //public Coord coord { get; set; }
         //public List<Weather> weather { get; set; }
