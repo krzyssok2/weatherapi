@@ -10,6 +10,7 @@ using System.Text.Json.Serialization;
 using System.Reflection;
 using System.IO;
 using System;
+using Microsoft.EntityFrameworkCore;
 
 namespace WeatherForecastAPI
 {
@@ -25,11 +26,13 @@ namespace WeatherForecastAPI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddDbContext<WeatherContext>(options => options.UseSqlServer(Configuration.GetConnectionString("MyWeatherAPIDatabase")));
             services.AddControllers()
             .AddJsonOptions(opts =>
             {
                 opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
+            services.AddDbContext<WeatherContext>(options=> options.UseSqlServer(Configuration.GetConnectionString("MyWeatherApi")));
             services.AddHttpClient("OWM", c =>
             {
                 c.BaseAddress = new Uri("http://api.openweathermap.org/data/2.5/");
@@ -56,6 +59,8 @@ namespace WeatherForecastAPI
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 c.IncludeXmlComments(xmlPath);
             });
+            services.AddControllers().AddNewtonsoftJson(options =>
+            options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -106,7 +111,9 @@ namespace WeatherForecastAPI
                     "<p></p>" +
                     "<a href='/api/weather/test/OWM/vilnius'>Vilnius test OWM</a>" +
                     "<p></p>" +
-                    "<a href='/api/weather/test/BBC/vilnius'>Vilnius test BBC</a>");
+                    "<a href='/api/weather/test/BBC/vilnius'>Vilnius test BBC</a>"+
+                    "<p></p>"+
+                    "<a href='/api/weather/test/linq/vilnius/BBC'>Test LINQ</a>");
                 await next();
             });
         }

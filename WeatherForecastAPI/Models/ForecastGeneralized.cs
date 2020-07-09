@@ -10,9 +10,9 @@ namespace WeatherForecastAPI.Models
         public string Name { get; set; }
         public string Provider { get; set; }
         public DateTime CreationDate { get; set; }
-        public List<Forecasts> Forecasts { get; set; } 
+        public List<ForecastsG> Forecasts { get; set; } 
     }
-    public class Forecasts
+    public class ForecastsG
     {
         public DateTime ForecastTime { get; set; }
         public double temperature { get; set; }

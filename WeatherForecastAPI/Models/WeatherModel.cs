@@ -40,12 +40,12 @@ namespace WeatherForecastAPI.Models
     }
     public class CityAverageByDay
     {
-        public string Date { get; set; }
+        public DateTime Date { get; set; }
         public double Average { get; set; }
     }
     public class AllStdevs
     {
-        public string CityId { get; set; }
+        public long CityId { get; set; }
         public DateTime FromDate { get; set; }
         public DateTime ToDate { get; set; }
         public List<StdevsProviders> Providers { get; set; }

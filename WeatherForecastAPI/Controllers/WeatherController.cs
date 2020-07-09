@@ -6,17 +6,25 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using WeatherForecastAPI.Models;
+using WeatherForecastAPI.Entities;
 using Newtonsoft;
 using Newtonsoft.Json;
 using System.Xml;
 using System.Net.Http;
 using System.Diagnostics;
-
+using Microsoft.EntityFrameworkCore;
 namespace WeatherForecastAPI.Controllers
 {
     [Route("api/[controller]")]
     public class WeatherController: ControllerBase
     {
+        private WeatherContext _context;
+        private IHttpClientFactory _httpClientFactory;
+        public WeatherController(WeatherContext context, IHttpClientFactory httpClientFactory)
+        {
+            _context = context;
+            _httpClientFactory = httpClientFactory;
+        }
         /// <summary>
         /// Get City average
         /// </summary>
@@ -27,71 +35,49 @@ namespace WeatherForecastAPI.Controllers
         [HttpGet("average/{CityId}")]
         public ActionResult<WeatherCityAverage> GetCityAverage(long CityId, DateTime FromDate, DateTime ToDate)
         {
-            Random random = new Random();
-            WeatherCityAverage CityAverage = new WeatherCityAverage
+            DateTime a= new DateTime();
+            if ((FromDate == a && ToDate != a) || (FromDate != a && ToDate == a)) return BadRequest();
+            if (FromDate == a) FromDate = DateTime.Now.Date;
+            if (ToDate == a) ToDate = FromDate.AddDays(1);
+            else
             {
-                CityId=1,
-                Average= new List<CityAverageByDay>
-                {
-                    new CityAverageByDay
-                    {
-                        Date="",
-                        Average=5
-                    },
-                    new CityAverageByDay
-                    {
-                        Date="",
-                        Average=12
-                    }
-                }
+                TimeSpan time = new TimeSpan(23, 59, 59);
+                ToDate = ToDate + time;
+            }
+            int HowManyDays = Convert.ToInt32(Math.Abs((FromDate - ToDate).TotalDays));
+            WeatherCityAverage Result = new WeatherCityAverage
+            {
+                CityId = CityId,
+                FromDate = Convert.ToDateTime(FromDate.ToString("yyyy'-'MM'-'dd")),
+                ToDate = Convert.ToDateTime(ToDate.ToString("yyyy'-'MM'-'dd")),
+                Average = new List<CityAverageByDay>()
             };
-            return CityAverage;
+            for (int i = 0; i < HowManyDays; i++)
+            {
+                var obj = _context.Forecasts
+                    .Where(a => a.ForecastTime >= FromDate.AddDays(i) && a.ForecastTime <= FromDate.AddDays(i + 1));
+                if (obj.Any())
+                {
+                    Result.Average.Add(new CityAverageByDay
+                    {
+                        Average = _context.Forecasts
+                        .Where(i => i.CitiesId == CityId)
+                        .Where(a => a.ForecastTime >= FromDate.AddDays(i) && a.ForecastTime <= FromDate.AddDays(i + 1))
+                        .Average(i => i.Temperature),
+                        Date = Convert.ToDateTime(FromDate.AddDays(i).ToString("yyyy'-'MM'-'dd"))
+                    });
+                }
+                else
+                {
+                    Result.Average.Add(new CityAverageByDay
+                    {
+                        Average=double.NaN,
+                        Date = Convert.ToDateTime(FromDate.AddDays(i).ToString("yyyy'-'MM'-'dd"))
+                    });
+                }
+            }
+            return Ok(Result);
         }
-        #region OldCodeAllAveragesOfAllCities
-        //[HttpGet("averages/from/{FromDate}/to/{ToDate}")]
-        //public ActionResult<WeatherAllAverages> GetAllCityAverages(string FromDate, string ToDate)
-        //{
-        //    WeatherAllAverages AllAverages = new WeatherAllAverages
-        //    {
-        //        AllCitiesAverage = new List<WeatherCityAverage>
-        //        {
-        //            new WeatherCityAverage
-        //            {
-        //                CityName="vilnius",
-        //                Country="lithuania",
-        //                FromDate=FromDate,
-        //                ToDate=ToDate,
-        //                Average=36
-        //            },
-        //            new WeatherCityAverage
-        //            {
-        //                CityName="kaunas",
-        //                Country="lithuania",
-        //                FromDate=FromDate,
-        //                ToDate=ToDate,
-        //                Average=36
-        //            },
-        //            new WeatherCityAverage
-        //            {
-        //                CityName="alytus",
-        //                Country="lithuania",
-        //                FromDate=FromDate,
-        //                ToDate=ToDate,
-        //                Average=36
-        //            },
-        //            new WeatherCityAverage
-        //            {
-        //                CityName="klaipeda",
-        //                Country="lithuania",
-        //                FromDate=FromDate,
-        //                ToDate=ToDate,
-        //                Average=36
-        //            },
-        //        }
-        //    };
-        //    return AllAverages;
-        //}
-        #endregion
         /// <summary>
         /// Get stdev of the city
         /// </summary>
@@ -102,85 +88,87 @@ namespace WeatherForecastAPI.Controllers
         [HttpGet("stdev/{CityId}")]
         public ActionResult<AllStdevs> GetAllStdevsFrom(long CityId, DateTime FromDate, DateTime ToDate)
         {
+            TimeSpan time = new TimeSpan(23, 59, 59);
+            ToDate = ToDate + time;
+            int HowManyDays = Convert.ToInt32(Math.Abs((FromDate - ToDate).TotalDays));
             AllStdevs AllStdevs = new AllStdevs
             {
-                
+                CityId=CityId,
+                FromDate=FromDate,
+                ToDate=ToDate,
+                Providers= new List<StdevsProviders>()
             };
-            return AllStdevs;
+            foreach(var obj in _context.Providers)
+            {
+                AllStdevs.Providers.Add(new StdevsProviders
+                {
+                    ProviderName=obj.ProviderName,
+                    Stdevs=new List<StdevsFactualAndAverage>()
+                });
+            }
+            double StDev = double.NaN;
+            foreach(var obj in AllStdevs.Providers)
+            {
+                for(int i=0;i<HowManyDays;i++)
+                {
+                    if (_context.Forecasts
+                        .Where(i => i.CitiesId == CityId&& i.Provider==obj.ProviderName)
+                        .Where(a => a.ForecastTime >= FromDate.AddDays(i) && a.ForecastTime <= FromDate.AddDays(i + 1)).Any())
+                    {
+                        double Mean =
+                            (_context.Forecasts
+                            .Where(i => i.CitiesId == CityId && i.Provider == obj.ProviderName)
+                            .Where(a => a.ForecastTime >= FromDate.AddDays(i) && a.ForecastTime <= FromDate.AddDays(i + 1))
+                            .Average(i => i.Temperature));
+                         
+                        double Sum =
+                            _context.Forecasts
+                            .Where(i => i.CitiesId == CityId && i.Provider == obj.ProviderName)
+                            .Where(a => a.ForecastTime >= FromDate.AddDays(i) && a.ForecastTime <= FromDate.AddDays(i + 1))
+                            .Sum(i => (i.Temperature - Mean) * (i.Temperature - Mean));
+                        double div =
+                            _context.Forecasts
+                            .Where(i => i.CitiesId == CityId && i.Provider == obj.ProviderName)
+                            .Where(a => a.ForecastTime >= FromDate.AddDays(i) && a.ForecastTime <= FromDate.AddDays(i + 1))
+                            .Count();
+
+                        StDev = Math.Sqrt(Sum / div);
+                    }
+                        
+                    obj.Stdevs.Add(new StdevsFactualAndAverage
+                    {
+                        Date=FromDate.AddDays(i),
+                        Factual=double.NaN,
+                        Stdev=StDev
+                    });
+                    StDev = double.NaN;
+                }
+            }
+            return Ok(AllStdevs);
         }/// <summary>
-        /// Gets forecast for specific city
-        /// </summary>
-        /// <param name="CityId"></param>
-        /// <param name="FromDate"></param>
-        /// <param name="ToDate"></param>
-        /// <returns></returns>
+         /// Gets forecast for specific city
+         /// </summary>
+         /// <param name="CityId"></param>
+         /// <param name="FromDate"></param>
+         /// <param name="ToDate"></param>
+         /// <returns></returns>
         [HttpGet("{CityId}")]
         public ActionResult<WeatherRawForecasts> GetAllForecasts(long CityId, DateTime FromDate, DateTime ToDate)
         {
-            WeatherRawForecasts forecasts = new WeatherRawForecasts
-            {
-
-            };
+            WeatherRawForecasts forecasts = new WeatherRawForecasts();
             return forecasts;
         }
 
 
-
-
-        private IHttpClientFactory _httpClientFactory;
-        public WeatherController(IHttpClientFactory httpClientFactory)
-        {
-            _httpClientFactory = httpClientFactory;
-        }
-        [HttpGet("test/OWM/{CityId}")]
-        public async Task<ActionResult> GetTestOWM(string CityId)
-        {
-            OWMForecastRootObject weatherinfo = await TestAsync<OWMForecastRootObject>("OWM", string.Format("forecast?q={0}&units=metric&appid=4bd458b0d9e2bfadbed92b6b73ce4274", CityId), false);
-            ForecastGeneralized forecastGeneralized = new ForecastGeneralized
-            {
-                Name = weatherinfo.city.name.ToLower(),
-                CreationDate = Convert.ToDateTime(DateTime.Now.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss")),
-                Provider = "OWM",
-                Forecasts = new List<Forecasts>()
-            };
-            foreach (var x in weatherinfo.list)
-            {
-                Forecasts item = new Forecasts
-                {
-                    temperature = x.main.temp,
-                    ForecastTime = x.dt_txt
-                };
-                forecastGeneralized.Forecasts.Add(item);
-            }
-            return Ok(forecastGeneralized);
-        }
-        [HttpGet("test/METEO/{CityId}")]
-        public async Task<ActionResult> GetTestMETEO(string CityId)
-        {
-            MeteoRootObject weatherinfo = await TestAsync<MeteoRootObject>("METEO", string.Format("places/{0}/forecasts/long-term", CityId), false);
-
-            ForecastGeneralized forecastGeneralized = new ForecastGeneralized
-            {
-                Name = weatherinfo.place.name.ToLower(),
-                Provider="Meteo",
-                CreationDate = weatherinfo.forecastCreationTimeUtc,
-                Forecasts= new List<Forecasts>()
-            };
-            foreach (var x in weatherinfo.forecastTimestamps)
-            {
-                Forecasts item = new Forecasts
-                {
-                    ForecastTime = x.forecastTimeUtc,
-                    temperature = x.airTemperature
-                };
-                forecastGeneralized.Forecasts.Add(item);
-            }
-
-            return Ok(forecastGeneralized);
-        }
         [HttpGet("test/BBC/{CityId}")]
         public ActionResult GetTestBBC(string CityId)
         {
+            var UniqueProviderID = _context.CityProviderID
+                .Where(cp => cp.City.Name == CityId && cp.Provider.ProviderName == "BBC")
+                .Select(i => new { i.UniqueCityID})
+                .ToList();
+            if (UniqueProviderID.FirstOrDefault() == null) return NotFound("Not found");
+
             using WebClient client = new WebClient();
             string doc = client.DownloadString(Uri.EscapeUriString("https://www.bbc.com/weather/593116?day=1/application/json"));
             doc = doc.Substring(doc.IndexOf("application/json"));
@@ -189,16 +177,16 @@ namespace WeatherForecastAPI.Controllers
             BBCScrapRootObject weatherinfo = JsonConvert.DeserializeObject<BBCScrapRootObject>(doc);
             ForecastGeneralized forecastGeneralized = new ForecastGeneralized
             {
-                Name = weatherinfo.data.location.name,
+                Name = weatherinfo.data.location.name.ToLower(),
                 Provider = "BBC",
                 CreationDate = Convert.ToDateTime(DateTime.Now.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss")),
-                Forecasts = new List<Forecasts>()
+                Forecasts = new List<ForecastsG>()
             };
             foreach (var x in weatherinfo.data.forecasts)
             {
                 foreach (var y in x.detailed.reports)
                 {
-                    Forecasts item = new Forecasts
+                    ForecastsG item = new ForecastsG
                     {
                         ForecastTime = Convert.ToDateTime(Convert.ToString(y.localDate + "T" + y.timeslot)),
                         temperature = y.temperatureC
@@ -206,9 +194,170 @@ namespace WeatherForecastAPI.Controllers
                     forecastGeneralized.Forecasts.Add(item);
                 }
             }
+            var ObjectFromDatabase = _context.Cities
+                .Include(i => i.Forecasts)
+                .First(i => i.Name == CityId);
+            foreach (var x in forecastGeneralized.Forecasts)
+            {
+                ObjectFromDatabase.Forecasts.Add(new Forecasts
+                {
+                    CreatedDate = forecastGeneralized.CreationDate,
+                    ForecastTime = x.ForecastTime,
+                    Temperature = x.temperature,
+                    Provider = forecastGeneralized.Provider,
+                });
+            }
+            _context.SaveChanges();
             return Ok(forecastGeneralized);
 
 
+        }
+        [HttpGet("test/linq/{CityId}/{Provider}")]
+        public async Task<ActionResult> TestLinQDatabase(string CityId, string Provider)
+        {   
+            //Get Unique ID
+            //var MySomething = _context.Cities
+            //    .Where(i => i.Name == "Vilnius")
+            //    .SelectMany(i => i.UniqueProviderID)
+            //    .Select(i => new { i.UniqueCityID, i.Provider.ProviderName })
+            //    .Where(i => i.ProviderName == "BBC")
+            //    .ToList();
+            var UniqueProviderID = _context.CityProviderID
+                .Where(cp => cp.City.Name == CityId && cp.Provider.ProviderName == Provider)
+                .Select(i => new { i.UniqueCityID/*, i.Provider.ProviderName*/ })
+                .ToList();
+                 return Ok(UniqueProviderID.First().UniqueCityID);
+        }
+
+        [HttpGet("test/OWMNow/{CityId}")]
+        public async Task<ActionResult> GetTestOWMNow(string CityId)
+        {
+            var UniqueProviderID = _context.CityProviderID
+                .Where(cp => cp.City.Name == CityId && cp.Provider.ProviderName == "OWM")
+                .Select(i => new { i.UniqueCityID })
+                .ToList();
+
+            if (UniqueProviderID.FirstOrDefault() == null) return NotFound("Not found");
+            OWMNowRootObject weatherinfo = await TestAsync<OWMNowRootObject>("OWM", string.Format("weather?{0}&units=metric&appid=4bd458b0d9e2bfadbed92b6b73ce4274", UniqueProviderID.First().UniqueCityID), false);
+            ForecastGeneralized forecastGeneralized = new ForecastGeneralized
+            {
+                Name = CityId,
+                CreationDate = Convert.ToDateTime(DateTime.Now.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss")),
+                Provider = "OWM",
+                Forecasts = new List<ForecastsG>()
+            };
+            forecastGeneralized= new ForecastGeneralized
+            {
+                CreationDate=DateTime.Now,
+                Name=weatherinfo.name,
+                Provider="OWM",
+                Forecasts = new List<ForecastsG>
+                {
+                    new ForecastsG
+                    {
+                        ForecastTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc) + TimeSpan.FromSeconds(weatherinfo.dt),
+                        temperature=weatherinfo.main.temp
+                    }
+                }
+            };
+            var ObjectFromDatabase = _context.Cities
+                .Include(i => i.ActualTemparture)
+                .First(i => i.Name == CityId);
+            ObjectFromDatabase.ActualTemparture.Add(new ActualTemperature
+            {
+                ForecastTime = forecastGeneralized.Forecasts.First().ForecastTime,
+                Temperature = forecastGeneralized.Forecasts.First().temperature
+            });
+            _context.SaveChanges();
+            return Ok(forecastGeneralized);
+
+        }
+        [HttpGet("test/OWM/{CityId}")]
+        public async Task<ActionResult> GetTestOWM(string CityId)
+        {
+            var UniqueProviderID = _context.CityProviderID
+                .Where(cp => cp.City.Name == CityId && cp.Provider.ProviderName == "OWM")
+                .Select(i => new { i.UniqueCityID})
+                .ToList();
+
+            if (UniqueProviderID.FirstOrDefault() == null) return NotFound("Not found");                    
+            OWMOneCallRootObject weatherinfo = await TestAsync<OWMOneCallRootObject>("OWM", string.Format("onecall?{0}&units=metric&appid=4bd458b0d9e2bfadbed92b6b73ce4274", UniqueProviderID.First().UniqueCityID), false);
+            ForecastGeneralized forecastGeneralized = new ForecastGeneralized
+            {
+                Name = CityId,
+                CreationDate = Convert.ToDateTime(DateTime.Now.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss")),
+                Provider = "OWM",
+                Forecasts = new List<ForecastsG>()
+            };
+           foreach (var x in weatherinfo.hourly)
+           {
+                ForecastsG item = new ForecastsG
+                {
+                    temperature = x.temp,
+                    ForecastTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)+ TimeSpan.FromSeconds(x.dt),
+                };
+                item.ForecastTime= Convert.ToDateTime(item.ForecastTime.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss"));
+                forecastGeneralized.Forecasts.Add(item);
+            }
+
+            var ObjectFromDatabase = _context.Cities
+                .Include(i => i.Forecasts)
+                .First(i => i.Name == CityId);
+            foreach (var x in forecastGeneralized.Forecasts)
+            {
+                ObjectFromDatabase.Forecasts.Add(new Forecasts
+                {
+                    CreatedDate = forecastGeneralized.CreationDate,
+                    ForecastTime = x.ForecastTime,
+                    Temperature = x.temperature,
+                    Provider = forecastGeneralized.Provider,
+                });
+            }
+            _context.SaveChanges();
+            return Ok(forecastGeneralized);
+            
+        }
+        [HttpGet("test/METEO/{CityId}")]
+        public async Task<ActionResult> GetTestMETEO(string CityId)
+        {
+            var UniqueProviderID = _context.CityProviderID
+                .Where(cp => cp.City.Name == CityId && cp.Provider.ProviderName == "METEO")
+                .Select(i => new { i.UniqueCityID })
+                .ToList();
+            if (UniqueProviderID.FirstOrDefault() == null) return NotFound("Not found");
+
+            MeteoRootObject weatherinfo = await TestAsync<MeteoRootObject>("METEO", string.Format("places/{0}/forecasts/long-term", UniqueProviderID.First().UniqueCityID), false);
+            ForecastGeneralized forecastGeneralized = new ForecastGeneralized
+            {
+                Name = weatherinfo.place.name.ToLower(),
+                Provider = "Meteo",
+                CreationDate = weatherinfo.forecastCreationTimeUtc,
+                Forecasts = new List<ForecastsG>()
+            };
+            foreach (var x in weatherinfo.forecastTimestamps)
+            {
+                ForecastsG item = new ForecastsG
+                {
+                    ForecastTime = x.forecastTimeUtc,
+                    temperature = x.airTemperature
+                };
+                forecastGeneralized.Forecasts.Add(item);
+            }
+            var ObjectFromDatabase = _context.Cities
+                .Include(i => i.Forecasts)
+                .First(i => i.Name == CityId);
+            foreach (var x in forecastGeneralized.Forecasts)
+            {
+                ObjectFromDatabase.Forecasts.Add(new Forecasts
+                {
+                    CreatedDate = forecastGeneralized.CreationDate,
+                    ForecastTime = x.ForecastTime,
+                    Temperature = x.temperature,
+                    Provider = forecastGeneralized.Provider,
+                });
+            }
+            _context.SaveChanges();
+            return Ok(forecastGeneralized);
         }
         public async Task<T> TestAsync<T>(string provider, string path, bool IsXML)
         {
@@ -223,45 +372,5 @@ namespace WeatherForecastAPI.Controllers
             T MyClass = JsonConvert.DeserializeObject<T>(result);
             return MyClass;
         }
-        #region Providers
-        //[HttpGet("city/{CityName}/provider/OWM")]
-        //public ActionResult<OWMRootObject> FetchOWMCurrentData(string CityName)
-        //{
-        //    string appId = "4bd458b0d9e2bfadbed92b6b73ce4274";
-        //    string url = string.Format("http://api.openweathermap.org/data/2.5/weather?q={0}&units=metric&cnt=1&APPID={1}", CityName, appId);
-        //    using (WebClient client = new WebClient())
-        //    {
-        //        string json = client.DownloadString(url);
-        //        OWMRootObject weatherinfo = JsonConvert.DeserializeObject<OWMRootObject>(json);
-        //        return weatherinfo;
-        //    }
-        //}
-        //[HttpGet("city/{CityName}/provider/METEO")]
-        //public ActionResult<MeteoRootObject> FetchMETEOCurrentData(string CityName)
-        //{
-        //    string url = string.Format("https://api.meteo.lt/v1/places/{0}/forecasts/long-term", CityName);
-        //    using (WebClient client = new WebClient())
-        //    {
-        //        string json = client.DownloadString(url);
-        //        MeteoRootObject weatherinfo = JsonConvert.DeserializeObject<MeteoRootObject>(json);
-        //        return weatherinfo;
-        //    }
-        //}
-        //[HttpGet("city/{CityName}/provider/BBC")]
-        //public ActionResult<BBCRootObject> FetchBBCCurrentData(string CityName)
-        //{
-        //    string url = string.Format("https://weather-broker-cdn.api.bbci.co.uk/en/forecast/rss/3day/593116");
-        //    using (WebClient client = new WebClient())
-        //    {
-        //        string xml = client.DownloadString(url);
-        //        XmlDocument doc = new XmlDocument();
-        //        doc.LoadXml(xml);
-        //        string json = JsonConvert.SerializeXmlNode(doc);
-
-        //        BBCRootObject weatherinfo = JsonConvert.DeserializeObject<BBCRootObject>(json);
-        //        return weatherinfo;
-        //    }
-        //}
-        #endregion
     }
 }

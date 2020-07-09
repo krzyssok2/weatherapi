@@ -13,19 +13,6 @@ namespace WeatherForecastAPI.Controllers
     public class SettingsController: ControllerBase
     {
         /// <summary>
-        /// Edit prefered unit
-        /// </summary>
-        /// <returns></returns>
-        //[HttpPut("unit")]
-        //public ActionResult<PreferedTemperature> PutPreferedUnit()
-        //{
-        //    PreferedTemperature preferedTemperature = new PreferedTemperature
-        //    {
-        //        PrefferedUnit = Temperature.F
-        //    };
-        //    return Ok();
-        //}
-        /// <summary>
         ///User's favorite cities 
         /// </summary>
         /// <returns></returns>

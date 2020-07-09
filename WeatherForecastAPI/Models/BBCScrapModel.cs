@@ -108,7 +108,7 @@ namespace WeatherForecastAPI.Models
 
     }
 
-    public class Forecast
+    public class ForecastOWN
     {
         public Detailed detailed { get; set; }
         //public Summary summary { get; set; }
@@ -127,7 +127,7 @@ namespace WeatherForecastAPI.Models
 
     public class Data
     {
-        public List<Forecast> forecasts { get; set; }
+        public List<ForecastOWN> forecasts { get; set; }
         //public bool isNight { get; set; }
         //public DateTime issueDate { get; set; }
         //public DateTime lastUpdated { get; set; }
