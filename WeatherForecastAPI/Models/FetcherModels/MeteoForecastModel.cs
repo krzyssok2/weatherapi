@@ -9,7 +9,7 @@ namespace WeatherForecastAPI.Models
     {
         public Place place { get; set; }
         //public string forecastType {get;set;}
-        public DateTime forecastCreationTimeUtc { get; set; }
+        //public DateTime forecastCreationTimeUtc { get; set; }
         public List<ForecastTimestamps> forecastTimestamps { get; set; }
     }
     public class Place
@@ -19,7 +19,7 @@ namespace WeatherForecastAPI.Models
         //public string administrativeDivision { get; set; }
         public string country { get; set; }
         //public string countryCode { get; set; }
-        public Coordinates coordinates { get; set; }
+        //public Coordinates coordinates { get; set; }
 
     }
     public class Coordinates
@@ -31,13 +31,13 @@ namespace WeatherForecastAPI.Models
     {
         public DateTime forecastTimeUtc { get; set; }
         public double airTemperature { get; set; }
-        public double windSpeed { get; set; }
-        public double windGust { get; set; }
-        public double windDirection { get; set; }
-        public double cloudCover { get; set; }
-        public double seaLevelPressure { get; set; }
-        public double relativeHumidity { get; set; }
-        public double totalPrecipitation { get; set; }
-        public string conditionCode { get; set; }
+        //public double windSpeed { get; set; }
+        //public double windGust { get; set; }
+        //public double windDirection { get; set; }
+        //public double cloudCover { get; set; }
+        //public double seaLevelPressure { get; set; }
+        //public double relativeHumidity { get; set; }
+        //public double totalPrecipitation { get; set; }
+        //public string conditionCode { get; set; }
     }
 }

@@ -11,6 +11,7 @@ using System.Reflection;
 using System.IO;
 using System;
 using Microsoft.EntityFrameworkCore;
+using WeatherForecastAPI.Worker;
 
 namespace WeatherForecastAPI
 {
@@ -59,6 +60,11 @@ namespace WeatherForecastAPI
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 c.IncludeXmlComments(xmlPath);
             });
+            services.AddTransient<IHostedService, FetcherService>();
+            services.AddScoped<BBCFetcher>();
+            services.AddScoped<MeteoFetcher>();
+            services.AddScoped<OWMFetcher>();
+            services.AddScoped<OWMActualFetcher>();
             services.AddControllers().AddNewtonsoftJson(options =>
             options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
         }
@@ -106,14 +112,7 @@ namespace WeatherForecastAPI
                     "<a href='/api/Users'>Go to Users</a>" +
                     "<p></p>" +
                     "<a href='/swagger'>Go to Swagger</a>" +
-                    "<p style=\"color:#808000;\">============================================</p>"+
-                    "<a href='/api/weather/test/METEO/vilnius'>Vilnius test METEO</a>" +
-                    "<p></p>" +
-                    "<a href='/api/weather/test/OWM/vilnius'>Vilnius test OWM</a>" +
-                    "<p></p>" +
-                    "<a href='/api/weather/test/BBC/vilnius'>Vilnius test BBC</a>"+
-                    "<p></p>"+
-                    "<a href='/api/weather/test/linq/vilnius/BBC'>Test LINQ</a>");
+                    "<p style=\"color:#808000;\">============================================</p>");
                 await next();
             });
         }

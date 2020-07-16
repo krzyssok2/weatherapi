@@ -58,7 +58,7 @@ namespace WeatherForecastAPI.Models
     public class StdevsFactualAndAverage
     {
         public DateTime Date { get; set; }
-        public double Factual { get; set; }
-        public double Stdev { get; set; }
+        public double? Factual { get; set; }
+        public double? Stdev { get; set; }
     }
 }

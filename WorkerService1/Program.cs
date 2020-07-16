@@ -1,7 +1,7 @@
-using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace WeatherForecastAPI
+namespace WorkerService1
 {
     public class Program
     {
@@ -12,9 +12,9 @@ namespace WeatherForecastAPI
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
+                .ConfigureServices((hostContext, services) =>
                 {
-                    webBuilder.UseStartup<Startup>();
+                    services.AddHostedService<Worker>();
                 });
     }
 }
