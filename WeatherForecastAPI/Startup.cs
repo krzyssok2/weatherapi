@@ -12,6 +12,7 @@ using System.IO;
 using System;
 using Microsoft.EntityFrameworkCore;
 using WeatherForecastAPI.Worker;
+using System.Collections.Generic;
 
 namespace WeatherForecastAPI
 {
@@ -33,7 +34,9 @@ namespace WeatherForecastAPI
             {
                 opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
-            services.AddDbContext<WeatherContext>(options=> options.UseSqlServer(Configuration.GetConnectionString("MyWeatherApi")));
+            services.AddDbContext<WeatherContext>(options => options.UseSqlServer(Configuration.GetConnectionString("MyWeatherApi")));
+                
+            //Add httpclinet for providers
             services.AddHttpClient("OWM", c =>
             {
                 c.BaseAddress = new Uri("http://api.openweathermap.org/data/2.5/");
@@ -61,10 +64,17 @@ namespace WeatherForecastAPI
                 c.IncludeXmlComments(xmlPath);
             });
             services.AddTransient<IHostedService, FetcherService>();
-            services.AddScoped<BBCFetcher>();
-            services.AddScoped<MeteoFetcher>();
-            services.AddScoped<OWMFetcher>();
+
+            //Add Fetcher services
+            services.AddScoped<IFetcher,BBCFetcher>();
+            services.AddScoped<IFetcher,MeteoFetcher>();
+            services.AddScoped<IFetcher,OWMFetcher>();
             services.AddScoped<OWMActualFetcher>();
+
+            //Get List of all Ifetcher Interfaces
+            services.AddScoped<List<IFetcher>>();
+
+
             services.AddControllers().AddNewtonsoftJson(options =>
             options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
         }
@@ -89,7 +99,7 @@ namespace WeatherForecastAPI
 
             app.UseAuthorization();
 
-            app.Map("/weatherforecast", Page1);
+            //app.Map("/weatherforecast", Page1);
 
             
 
@@ -98,24 +108,24 @@ namespace WeatherForecastAPI
                 endpoints.MapControllers();
             });
         }
-        private static void Page1(IApplicationBuilder app)
-        {
+        //private static void Page1(IApplicationBuilder app)
+        //{
 
-            app.Use(async (context, next) =>
-            {
+        //    app.Use(async (context, next) =>
+        //    {
 
-                await context.Response.WriteAsync("<p>FastLinks</p>" +
-                    "<a href='/api/cities'>Go api cities</a>" +
-                    "<p></p>" +
-                    "<a href='/api/weather'>Go to api weather</a>" +
-                    "<p></p>" +
-                    "<a href='/api/Users'>Go to Users</a>" +
-                    "<p></p>" +
-                    "<a href='/swagger'>Go to Swagger</a>" +
-                    "<p style=\"color:#808000;\">============================================</p>");
-                await next();
-            });
-        }
+        //        await context.Response.WriteAsync("<p>FastLinks</p>" +
+        //            "<a href='/api/cities'>Go api cities</a>" +
+        //            "<p></p>" +
+        //            "<a href='/api/weather'>Go to api weather</a>" +
+        //            "<p></p>" +
+        //            "<a href='/api/Users'>Go to Users</a>" +
+        //            "<p></p>" +
+        //            "<a href='/swagger'>Go to Swagger</a>" +
+        //            "<p style=\"color:#808000;\">============================================</p>");
+        //        await next();
+        //    });
+        //}
 
     }
 }

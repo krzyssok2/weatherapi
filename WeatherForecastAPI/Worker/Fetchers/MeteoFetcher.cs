@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http;
 using WeatherForecastAPI.Models;
-using WeatherForecastAPI.Entities;
-using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System.Xml;
 
@@ -15,15 +12,11 @@ namespace WeatherForecastAPI.Worker
     public class MeteoFetcher : IFetcher
     {
         public string ProviderName { get; } = "Meteo";
-        public MeteoFetcher(WeatherContext context, IHttpClientFactory httpClientFactory, IServiceScopeFactory scopeFactory)
+        public MeteoFetcher(IHttpClientFactory httpClientFactory)
         {
-            _context = context;
             _httpClientFactory = httpClientFactory;
-            _scopeFactory = scopeFactory;
         }
-        public WeatherContext _context;
         public IHttpClientFactory _httpClientFactory;
-        public IServiceScopeFactory _scopeFactory;
         public async Task<ForecastGeneralized> GetDataAsync(string uniqueCityId,string cityName)
         {
             MeteoRootObject weatherinfo =

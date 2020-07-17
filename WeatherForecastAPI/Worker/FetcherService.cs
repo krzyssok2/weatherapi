@@ -3,15 +3,12 @@ using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using WeatherForecastAPI.Models;
 using WeatherForecastAPI.Entities;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
-using System.Xml;
-using System.Net;
+using Serilog;
 
 namespace WeatherForecastAPI.Worker
 {
@@ -36,31 +33,53 @@ namespace WeatherForecastAPI.Worker
         {
             using var scope = scopeFactory.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<WeatherContext>();
-            if(context.Forecasts.Max(i=> i.CreatedDate).Hour!=DateTime.Now.Hour)
+            if(context.Forecasts.Max(i=> i.CreatedDate).Hour!=DateTime.Now.Hour&&context.ActualTemperatures.Max(i=>i.ForecastTime).Hour!=DateTime.Now.Hour)//Testing purposes
             {
-                List<IFetcher> Services = new List<IFetcher>
-                {
-                    scope.ServiceProvider.GetRequiredService<BBCFetcher>(),
-                    scope.ServiceProvider.GetRequiredService<MeteoFetcher>(),
-                    scope.ServiceProvider.GetRequiredService<OWMFetcher>(),
-                };
-                IFetcher FactualService = scope.ServiceProvider.GetRequiredService<OWMActualFetcher>();
+                var services = scope.ServiceProvider.GetRequiredService<List<IFetcher>>();
+
+                OWMActualFetcher FactualService = scope.ServiceProvider.GetRequiredService<OWMActualFetcher>();
                 foreach (var city in context.Cities.ToList())
                 {
-                    foreach (var service in Services)
+                    foreach (var service in services)
                     {
                         var uniqueCityId = GetUniqueID(city.Name, service.ProviderName, context);
-                        if (uniqueCityId == null) continue;
-                        var generalized = service.GetDataAsync(uniqueCityId, city.Name).Result;
-                        DBUpdateForecasts(generalized, city.Name, context);
+                        if (uniqueCityId == null) 
+                        {
+                            Log.Error($"Failed to find unqiue city id from provider:{service.ProviderName} for city: {city.Name}");
+                            continue;
+                        }
+                        try
+                        {
+                            var generalized = service.GetDataAsync(uniqueCityId, city.Name).Result;
+                            DBUpdateForecasts(generalized, city.Name, context);
+                            Log.Information($"Succesfully fetched data from provider:{service.ProviderName} for city: {city.Name}");
+                        }
+                        catch
+                        {
+                            Log.Error($"Failed to fetch data from provider: {service.ProviderName} for city:{city.Name}");
+                        }
+
                     }
+
                 }
                 foreach (var city in context.Cities.ToList())
                 {
                     var uniqueCityId = GetUniqueID(city.Name, "OWM", context);
-                    if (uniqueCityId == null) continue;
-                    var generalized = FactualService.GetDataAsync(uniqueCityId, city.Name).Result;
-                    DbUpdateActual(generalized, city.Name, context);
+                    if (uniqueCityId == null) 
+                    {
+                        Log.Error($"Failed to get factual data for {city.Name}");
+                        continue;
+                    }
+                    try
+                    {
+                        Log.Information($"Successfully fetched factual data from {city.Name}");
+                        var generalized = FactualService.GetDataAsync(uniqueCityId, city.Name).Result;
+                        DbUpdateActual(generalized, city.Name, context);
+                    }
+                    catch
+                    {
+                        Log.Error($"Failed to get factual data for {city.Name}");
+                    }
                 }
             }
         }

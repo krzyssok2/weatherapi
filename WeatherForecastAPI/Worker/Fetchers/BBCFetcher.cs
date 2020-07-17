@@ -2,13 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http;
 using WeatherForecastAPI.Models;
-using WeatherForecastAPI.Entities;
-using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using System.Xml;
 using System.Net;
 
 namespace WeatherForecastAPI.Worker

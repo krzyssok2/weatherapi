@@ -1,29 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http;
 using WeatherForecastAPI.Models;
-using WeatherForecastAPI.Entities;
-using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System.Xml;
 
 namespace WeatherForecastAPI.Worker
 {
-    public class OWMFetcher : IFetcher
+    public class OWMFetcher :IFetcher
     {
         public string ProviderName { get; } = "OWM";
-        public OWMFetcher(WeatherContext context, IHttpClientFactory httpClientFactory, IServiceScopeFactory scopeFactory)
+        public OWMFetcher(IHttpClientFactory httpClientFactory)
         {
-            _context = context;
             _httpClientFactory = httpClientFactory;
-            _scopeFactory = scopeFactory;
         }
-        public WeatherContext _context;
         public IHttpClientFactory _httpClientFactory;
-        public IServiceScopeFactory _scopeFactory;
         public async Task<ForecastGeneralized> GetDataAsync(string uniqueCityId, string cityName)
         {
             OWMOneCallRootObject weatherinfo = await Deserializer<OWMOneCallRootObject>("OWM", string.Format("onecall?{0}&units=metric&appid=4bd458b0d9e2bfadbed92b6b73ce4274", uniqueCityId), false);

@@ -11,7 +11,7 @@ using System.Xml;
 using System.Net.Http;
 using Microsoft.EntityFrameworkCore;
 using WeatherForecastAPI.Worker;
-
+using Serilog;
 namespace WeatherForecastAPI.Controllers
 {
     [Route("api/[controller]")]
@@ -44,6 +44,7 @@ namespace WeatherForecastAPI.Controllers
 
             if ((toDate - fromDate).TotalDays > 14 || (toDate - fromDate).TotalDays < 0)
             {
+                Log.Error($"No data was provided for city with Id {cityId} as time period was too big {fromDate.Date} - {toDate.Date}");
                 return BadRequest(new ErrorHandlingModel
                 {
                     Error = 400,
@@ -53,17 +54,17 @@ namespace WeatherForecastAPI.Controllers
             }
             var forecasts = GetForecasts(fromDate, toDate, cityId);
             var actualTemperature = GetActualTemperatures(fromDate, toDate, cityId);
-            var averageActualTemperature = actualTemperature.Average(i => i.Temperature);
+            var averageActualTemperature = actualTemperature.Average(i =>(double?) i.Temperature);
             var providers = GetProvidersWithStdevs(fromDate, toDate, cityId, actualTemperature, forecasts, averageActualTemperature);
 
-            AllStdevs AllStdevs = new AllStdevs
+            AllStdevs allStdevs = new AllStdevs
             {
                 CityId = cityId,
                 FromDate = fromDate,
                 ToDate = toDate,
                 Providers= providers
             };
-            foreach(var provider in AllStdevs.Providers.ToList())
+            foreach(var provider in allStdevs.Providers.ToList())
             {
                 foreach (var stdev in provider.Stdevs.ToList())
                 {
@@ -73,8 +74,9 @@ namespace WeatherForecastAPI.Controllers
                     }
                 }
             }
-            if (AllStdevs.Providers.Count == 0) 
+            if (allStdevs.Providers.Count == 0) 
             {
+                Log.Error($"No stdev data was found for city with ID {cityId} within period {fromDate.Date} - {toDate.Date}");
                 return NotFound(new ErrorHandlingModel
                 {
                     Error= 404,
@@ -83,7 +85,7 @@ namespace WeatherForecastAPI.Controllers
                     
                 });
             }
-            return Ok(AllStdevs);
+            return Ok(allStdevs);
         }
         /// <summary>
         /// Get City average
@@ -103,6 +105,7 @@ namespace WeatherForecastAPI.Controllers
 
             if ((toDate - fromDate).TotalDays > 14 || (toDate - fromDate).TotalDays < 0)
             {
+                Log.Error($"No data was provided for city with Id {cityId} as time period was too big {fromDate.Date} - {toDate.Date}");
                 return BadRequest(new ErrorHandlingModel
                 {
                     Error = 400,
@@ -134,6 +137,7 @@ namespace WeatherForecastAPI.Controllers
             };
             if (result.Average.Count == 0)
             {
+                Log.Error($"No averages found for city with ID {cityId} within period {fromDate.Date} - {toDate.Date}");
                 return NotFound(new ErrorHandlingModel
                 {
                     Error = 404,
@@ -161,6 +165,7 @@ namespace WeatherForecastAPI.Controllers
 
             if ((toDate - fromDate).TotalDays > 14 || (toDate - fromDate).TotalDays < 0)
             {
+                Log.Error($"No data was provided for city with Id {cityId} as time period was too big {fromDate.Date} - {toDate.Date}");
                 return BadRequest(new ErrorHandlingModel
                 {
                     Error = 400,
@@ -208,6 +213,7 @@ namespace WeatherForecastAPI.Controllers
             };
             if (forecasts.Providers.Count == 0)
             {
+                Log.Error($"No raw data was found for city with ID {cityId} within period {fromDate.Date} - {toDate.Date}");
                 return NotFound( new ErrorHandlingModel
                 {
                     Error = 404,
@@ -221,14 +227,10 @@ namespace WeatherForecastAPI.Controllers
         }
 
 
-
-
-
-
-        double? GetStdev(double? AverageActualTemperature, List<Forecasts> forecasts, DateTime date, string provider)
+        double? GetStdev(double? averageActualTemperature, List<Forecasts> forecasts, DateTime date, string provider)
         {
 
-            var Mean = AverageActualTemperature;
+            var Mean = averageActualTemperature;
 
             if (Mean == null) return null;
 

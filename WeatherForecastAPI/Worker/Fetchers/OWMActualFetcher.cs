@@ -1,21 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http;
 using WeatherForecastAPI.Models;
-using WeatherForecastAPI.Entities;
-using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System.Xml;
 
 namespace WeatherForecastAPI.Worker
 {
-    public class OWMActualFetcher :IFetcher
+    public class OWMActualFetcher 
     {
         public string ProviderName { get; } = "OWM";
-        public OWMActualFetcher(WeatherContext context, IHttpClientFactory httpClientFactory, IServiceScopeFactory scopeFactory)
+        public OWMActualFetcher(IHttpClientFactory httpClientFactory)
         {
             _httpClientFactory = httpClientFactory;
         }

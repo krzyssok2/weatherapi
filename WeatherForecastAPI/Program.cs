@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using WeatherForecastAPI.Logging;
+using Serilog;
 
 namespace WeatherForecastAPI
 {
@@ -12,6 +15,12 @@ namespace WeatherForecastAPI
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .ConfigureLogging((hostingContext, logging) =>
+                {
+                    logging.ClearProviders();
+                    LoggerSetup.Configure(hostingContext);
+                    logging.AddSerilog(Log.Logger);
+                })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
