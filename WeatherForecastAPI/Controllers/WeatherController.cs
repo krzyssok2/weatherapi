@@ -2,16 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
 using WeatherForecastAPI.Models;
 using WeatherForecastAPI.Entities;
-using Newtonsoft.Json;
-using System.Xml;
 using System.Net.Http;
 using Microsoft.EntityFrameworkCore;
-using WeatherForecastAPI.Worker;
 using Serilog;
+
 namespace WeatherForecastAPI.Controllers
 {
     [Route("api/[controller]")]
@@ -230,20 +226,20 @@ namespace WeatherForecastAPI.Controllers
         double? GetStdev(double? averageActualTemperature, List<Forecasts> forecasts, DateTime date, string provider)
         {
 
-            var Mean = averageActualTemperature;
+            var mean = averageActualTemperature;
 
-            if (Mean == null) return null;
+            if (mean == null) return null;
 
-            var Sum = forecasts
+            var sum = forecasts
                         .Where(i => i.ForecastTime.Date == date && i.Provider == provider)
-                        .Sum(i => i.Temperature - Mean) * forecasts
+                        .Sum(i => i.Temperature - mean) * forecasts
                         .Where(i => i.ForecastTime.Date == date && i.Provider == provider)
-                        .Sum(i => i.Temperature - Mean);
+                        .Sum(i => i.Temperature - mean);
 
-            var Count = forecasts
+            var count = forecasts
                 .Where(i => i.ForecastTime.Date == date && i.Provider == provider).Count();
 
-            return Math.Sqrt((double)(Sum / Count));
+            return Math.Sqrt((double)(sum / count));
 
         }
         List<StdevsProviders> GetProvidersWithStdevs(DateTime fromDate, DateTime toDate, long cityId, List<ActualTemperature> actualTemperature, List<Forecasts> forecasts, double? averageActualTemperature)

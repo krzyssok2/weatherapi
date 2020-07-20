@@ -4,8 +4,6 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using WeatherForecastAPI.Models;
 using Newtonsoft.Json;
-using System.Xml;
-
 namespace WeatherForecastAPI.Worker
 {
     public class OWMActualFetcher 
@@ -18,7 +16,7 @@ namespace WeatherForecastAPI.Worker
         public IHttpClientFactory _httpClientFactory;
         public async Task<ForecastGeneralized> GetDataAsync(string uniqueCityId, string cityName)
         {
-            OWMNowRootObject weatherinfo = await Deserializer<OWMNowRootObject>("OWM", string.Format("weather?{0}&units=metric&appid=4bd458b0d9e2bfadbed92b6b73ce4274", uniqueCityId), false);
+            OWMNowRootObject weatherinfo = await Deserialize<OWMNowRootObject>("OWM", string.Format("weather?{0}&units=metric&appid=4bd458b0d9e2bfadbed92b6b73ce4274", uniqueCityId), false);
             ForecastGeneralized forecastGeneralized = new ForecastGeneralized
             {
                 Name = cityName,
@@ -42,16 +40,10 @@ namespace WeatherForecastAPI.Worker
             };
             return forecastGeneralized;
         }
-        async Task<T> Deserializer<T>(string provider, string path, bool IsXML)
+        async Task<T> Deserialize<T>(string provider, string path, bool IsXML)
         {
             var client = _httpClientFactory.CreateClient(provider);
             var result = await client.GetStringAsync(path);
-            if (IsXML == true)
-            {
-                XmlDocument doc = new XmlDocument();
-                doc.LoadXml(result);
-                result = JsonConvert.SerializeXmlNode(doc);
-            }
             T MyClass = JsonConvert.DeserializeObject<T>(result);
             return MyClass;
         }

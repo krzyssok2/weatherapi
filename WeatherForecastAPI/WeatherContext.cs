@@ -1,14 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using WeatherForecastAPI.Entities;
 using WeatherForecastAPI.EntityConfiguration;
 
 namespace WeatherForecastAPI
 {
-    public class WeatherContext : DbContext
+    public class WeatherContext : IdentityDbContext<IdentityUser>
     {
         public WeatherContext(DbContextOptions options): base(options) { }
 

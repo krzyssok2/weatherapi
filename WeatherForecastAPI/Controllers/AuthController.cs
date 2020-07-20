@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
@@ -12,14 +13,20 @@ namespace WeatherForecastAPI.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
+        private readonly UserManager<IdentityUser> _identityService;
+
+        public AuthController(UserManager<IdentityUser> identityService)
+        {
+            _identityService = identityService;
+        }
         /// <summary>
         /// Registration
         /// </summary>
         /// <returns></returns>
-        [HttpPost("Registration")]
+        [HttpPost("Login")]
         public ActionResult<AuthAccount> GetUserAccountInfo()
         {
-            AuthAccount UserAccount = new AuthAccount();
+            AuthAccount userAccount = new AuthAccount();
 
             return Ok();
         }
@@ -27,12 +34,24 @@ namespace WeatherForecastAPI.Controllers
         /// Login authentication
         /// </summary>
         /// <returns></returns>
-        [HttpPost("Login")]
-        public ActionResult<AuthToken> CreateUserAccount()
+        [HttpPost("Registration")]
+        public async Task<ActionResult> RegisterAsync([FromBody] AuthAccount request)
         {
-            AuthToken Token = new AuthToken();
+            var result = await _identityService.CreateAsync(new IdentityUser
+            {
+                UserName = request.Email,
+                Email = request.Email,
+            }, request.Password);
 
-            return Token;
+            if (!result.Succeeded)
+            {
+                return BadRequest(new AuthFailedResponse()
+                {
+                    Errors = result.Errors
+                });
+            }
+
+            return Ok();
         }
     }
 }

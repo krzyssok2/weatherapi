@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace WeatherForecastAPI.Models
+﻿namespace WeatherForecastAPI.Models
 {
     public class ResultViewModel
     {

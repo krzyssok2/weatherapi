@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using WeatherForecastAPI.Models;
 using Microsoft.OpenApi.Models;
-using Microsoft.AspNetCore.Http;
 using System.Text.Json.Serialization;
 using System.Reflection;
 using System.IO;
@@ -13,7 +12,11 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using WeatherForecastAPI.Worker;
 using System.Collections.Generic;
-
+using WeatherForecastAPI.Options;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.AspNetCore.Identity;
 namespace WeatherForecastAPI
 {
     public class Startup
@@ -29,13 +32,37 @@ namespace WeatherForecastAPI
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<WeatherContext>(options => options.UseSqlServer(Configuration.GetConnectionString("MyWeatherAPIDatabase")));
+            services.AddIdentity<IdentityUser, IdentityRole>().AddEntityFrameworkStores<WeatherContext>().AddDefaultTokenProviders();
             services.AddControllers()
             .AddJsonOptions(opts =>
             {
                 opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
             services.AddDbContext<WeatherContext>(options => options.UseSqlServer(Configuration.GetConnectionString("MyWeatherApi")));
-                
+
+            var jwtSettings = new JwtSettings();
+            Configuration.Bind(nameof(jwtSettings), jwtSettings);
+            services.AddSingleton(jwtSettings);
+
+            services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(x =>
+            {
+                x.SaveToken = true;
+                x.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSettings.Secret)),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    RequireExpirationTime = false,
+                    ValidateLifetime = true
+                };
+            });
             //Add httpclinet for providers
             services.AddHttpClient("OWM", c =>
             {
@@ -55,14 +82,36 @@ namespace WeatherForecastAPI
                 //c.DefaultRequestHeaders.Add("");
 
             });
-            services.AddSwaggerGen(c =>
+
+            services.AddSwaggerGen(x =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
+                x.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
 
                 var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-                c.IncludeXmlComments(xmlPath);
+                x.IncludeXmlComments(xmlPath);
+
+                var security = new Dictionary<string, IEnumerable<string>>
+                {
+                    {"Bearer", new string[0] }
+                };
+                x.AddSecurityDefinition(name: "Bearer", new OpenApiSecurityScheme()
+                {
+                    Description = "JWT Authorization header using the bearer scheme",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.ApiKey
+                });
+                x.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {new OpenApiSecurityScheme{Reference = new OpenApiReference
+                    {
+                        Id = "Bearer",
+                        Type = ReferenceType.SecurityScheme
+                    }}, new List<string>()}
+                });
             });
+            
             services.AddTransient<IHostedService, FetcherService>();
 
             //Add Fetcher services
