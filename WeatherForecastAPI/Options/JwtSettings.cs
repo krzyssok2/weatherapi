@@ -1,7 +1,10 @@
-﻿namespace WeatherForecastAPI.Options
+﻿using System;
+
+namespace WeatherForecastAPI.Options
 {
     public class JwtSettings
     {
         public string Secret { get; set; }
+        public TimeSpan TokenLifetime { get; set; }
     }
 }

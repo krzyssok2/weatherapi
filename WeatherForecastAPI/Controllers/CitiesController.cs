@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using WeatherForecastAPI.Models;
-
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 namespace WeatherForecastAPI.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class CitiesController : ControllerBase
     {
         /// <summary>
@@ -16,10 +18,13 @@ namespace WeatherForecastAPI.Controllers
         {
             _context = context;
         }
+        /// <summary>
+        /// Get list of all cities
+        /// </summary>
         [HttpGet]
         public ActionResult<CitiesResponseModel> GetAllCities()
         {
-            CitiesResponseModel MyResponse = new CitiesResponseModel
+            CitiesResponseModel allCities = new CitiesResponseModel
             {
                 Cities = _context.Cities.Select(cityInfo => new CityInfoResponseModel
                 {
@@ -30,7 +35,7 @@ namespace WeatherForecastAPI.Controllers
                     ToDate = cityInfo.Forecasts.Max(i => i.ForecastTime)
                 }).ToList()
             };
-            return MyResponse;
+            return allCities;
         }
     }
 }

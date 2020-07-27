@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 namespace WeatherForecastAPI.Models
 {
-    public class WeatherModel
-    {
-    }
     public class WeatherRawForecasts
     {
         public long CityId { get; set; }

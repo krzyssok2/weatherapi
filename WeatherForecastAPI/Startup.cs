@@ -17,6 +17,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
+using Newtonsoft.Json.Converters;
+
 namespace WeatherForecastAPI
 {
     public class Startup
@@ -44,25 +47,30 @@ namespace WeatherForecastAPI
             Configuration.Bind(nameof(jwtSettings), jwtSettings);
             services.AddSingleton(jwtSettings);
 
+            var tokenValidationParameters= new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSettings.Secret)),
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                RequireExpirationTime = false,
+                ValidateLifetime = true
+            };
+
+            services.AddSingleton(tokenValidationParameters);
+
             services.AddAuthentication(x =>
             {
                 x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 x.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
                 x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
-            .AddJwtBearer(x =>
+            .AddJwtBearer(x => 
             {
                 x.SaveToken = true;
-                x.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSettings.Secret)),
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
-                    RequireExpirationTime = false,
-                    ValidateLifetime = true
-                };
+                x.TokenValidationParameters = tokenValidationParameters;
             });
+
             //Add httpclinet for providers
             services.AddHttpClient("OWM", c =>
             {
@@ -85,8 +93,7 @@ namespace WeatherForecastAPI
 
             services.AddSwaggerGen(x =>
             {
-                x.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
-
+                x.SwaggerDoc("v1", new OpenApiInfo { Title = "Weather API", Version = "v1" });
                 var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 x.IncludeXmlComments(xmlPath);
@@ -95,7 +102,7 @@ namespace WeatherForecastAPI
                 {
                     {"Bearer", new string[0] }
                 };
-                x.AddSecurityDefinition(name: "Bearer", new OpenApiSecurityScheme()
+                x.AddSecurityDefinition(name: "Bearer", new OpenApiSecurityScheme
                 {
                     Description = "JWT Authorization header using the bearer scheme",
                     Name = "Authorization",
@@ -123,9 +130,11 @@ namespace WeatherForecastAPI
             //Get List of all Ifetcher Interfaces
             services.AddScoped<List<IFetcher>>();
 
-
             services.AddControllers().AddNewtonsoftJson(options =>
             options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+
+            services.AddControllersWithViews()
+                .AddNewtonsoftJson(options => options.SerializerSettings.Converters.Add(new StringEnumConverter()));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

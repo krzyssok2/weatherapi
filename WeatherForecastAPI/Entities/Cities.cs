@@ -15,5 +15,6 @@ namespace WeatherForecastAPI.Entities
         public ICollection<Forecasts> Forecasts { get; set; }
         public ICollection<UniqueProviderID> UniqueProviderID { get; set; }
         public ICollection<ActualTemperature> ActualTemparture { get; set; }
+        public ICollection<FavoriteCities> FavoritedByUser { get; set; }
     }
 }

@@ -50,7 +50,7 @@ namespace WeatherForecastAPI.Worker
                     }
                     try
                     {
-                        var generalized = service.GetDataAsync(uniqueCityId, city.Name).Result;
+                        var generalized = service.GetData(uniqueCityId, city.Name).Result;
                         DBUpdateForecasts(generalized, city.Name, context);
                         Log.Information($"Succesfully fetched data from provider:{service.ProviderName} for city: {city.Name}");
                     }
@@ -58,12 +58,10 @@ namespace WeatherForecastAPI.Worker
                     {
                         Log.Error($"Failed to fetch data from provider: {service.ProviderName} for city:{city.Name}");
                     }
-
                 }
-
             }
 
-            OWMActualFetcher FactualService = scope.ServiceProvider.GetRequiredService<OWMActualFetcher>();
+            OWMActualFetcher factualService = scope.ServiceProvider.GetRequiredService<OWMActualFetcher>();
             foreach (var city in context.Cities.ToList())
             {
                 var uniqueCityId = uniqueId.FirstOrDefault(cp => cp.City.Name == city.Name && cp.Provider.ProviderName == "OWM").UniqueCityID;
@@ -75,7 +73,7 @@ namespace WeatherForecastAPI.Worker
                 try
                 {
                     Log.Information($"Successfully fetched factual data from {city.Name}");
-                    var generalized = FactualService.GetDataAsync(uniqueCityId, city.Name).Result;
+                    var generalized = factualService.GetData(uniqueCityId, city.Name).Result;
                     DbUpdateActual(generalized, city.Name, context);
                 }
                 catch
@@ -87,7 +85,7 @@ namespace WeatherForecastAPI.Worker
 
         bool WasWeatherAlreadyFetced(WeatherContext context)
         {
-            return context.Forecasts.Max(i => i.CreatedDate).Hour == DateTime.Now.Hour && context.ActualTemperatures.Max(i => i.ForecastTime).Hour == DateTime.Now.Hour;
+            return context.Forecasts.Max(i => i.CreatedDate).Hour == DateTime.Now.Hour;
         }
         void DbUpdateActual(ForecastGeneralized generalized,string cityId, WeatherContext _context)
         {
@@ -128,7 +126,5 @@ namespace WeatherForecastAPI.Worker
         {
             _timer?.Dispose();
         }
-
-
     }
 }

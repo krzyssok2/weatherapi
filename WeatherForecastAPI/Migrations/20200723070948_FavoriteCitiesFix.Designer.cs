@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WeatherForecastAPI;
 
 namespace WeatherForecastAPI.Migrations
 {
     [DbContext(typeof(WeatherContext))]
-    partial class WeatherContextModelSnapshot : ModelSnapshot
+    [Migration("20200723070948_FavoriteCitiesFix")]
+    partial class FavoriteCitiesFix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -266,7 +268,7 @@ namespace WeatherForecastAPI.Migrations
                     b.Property<long?>("CityId")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("UserId")
+                    b.Property<long?>("UserId")
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
@@ -385,8 +387,8 @@ namespace WeatherForecastAPI.Migrations
                         .HasColumnType("bigint")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int>("Units")
-                        .HasColumnType("int");
+                    b.Property<string>("Units")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("User")
                         .HasColumnType("nvarchar(max)");
@@ -464,9 +466,7 @@ namespace WeatherForecastAPI.Migrations
 
                     b.HasOne("WeatherForecastAPI.Entities.UserSettings", "User")
                         .WithMany("FavoriteCities")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
                 });
 
             modelBuilder.Entity("WeatherForecastAPI.Entities.Forecasts", b =>

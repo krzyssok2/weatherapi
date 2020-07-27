@@ -15,7 +15,7 @@ namespace WeatherForecastAPI.Worker
             _httpClientFactory = httpClientFactory;
         }
         public IHttpClientFactory _httpClientFactory;
-        public async Task<ForecastGeneralized> GetDataAsync(string uniqueCityId, string cityName)
+        public async Task<ForecastGeneralized> GetData(string uniqueCityId, string cityName)
         {
             OWMOneCallRootObject weatherinfo = await Deserialize<OWMOneCallRootObject>("OWM", string.Format("onecall?{0}&units=metric&appid=4bd458b0d9e2bfadbed92b6b73ce4274", uniqueCityId), false);
             ForecastGeneralized forecastGeneralized = new ForecastGeneralized
@@ -25,12 +25,12 @@ namespace WeatherForecastAPI.Worker
                 Provider = "OWM",
                 Forecasts = new List<ForecastsG>()
             };
-            foreach (var x in weatherinfo.hourly)
+            foreach (var forecast in weatherinfo.hourly)
             {
                 ForecastsG item = new ForecastsG
                 {
-                    temperature = x.temp,
-                    ForecastTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc) + TimeSpan.FromSeconds(x.dt),
+                    temperature = forecast.temp,
+                    ForecastTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc) + TimeSpan.FromSeconds(forecast.dt),
                 };
                 item.ForecastTime = Convert.ToDateTime(item.ForecastTime.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss"));
                 forecastGeneralized.Forecasts.Add(item);
@@ -43,8 +43,8 @@ namespace WeatherForecastAPI.Worker
         {
             var client = _httpClientFactory.CreateClient(provider);
             var result = await client.GetStringAsync(path);
-            T MyClass = JsonConvert.DeserializeObject<T>(result);
-            return MyClass;
+            T myClass = JsonConvert.DeserializeObject<T>(result);
+            return myClass;
         }
     }
 }

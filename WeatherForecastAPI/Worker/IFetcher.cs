@@ -6,6 +6,6 @@ namespace WeatherForecastAPI
     interface IFetcher
     {
         string ProviderName { get; }
-        Task<ForecastGeneralized> GetDataAsync(string uniqueCityId, string cityName);
+        Task<ForecastGeneralized> GetData(string uniqueCityId, string cityName);
     }
 }

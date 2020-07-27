@@ -15,7 +15,7 @@ namespace WeatherForecastAPI.Worker
             _httpClientFactory = httpClientFactory;
         }
         public IHttpClientFactory _httpClientFactory;
-        public async Task<ForecastGeneralized> GetDataAsync(string uniqueCityId,string cityName)
+        public async Task<ForecastGeneralized> GetData(string uniqueCityId,string cityName)
         {
             MeteoRootObject weatherinfo =
                 await Deserialize<MeteoRootObject>("METEO", string.Format("places/{0}/forecasts/long-term", uniqueCityId), false);
@@ -26,12 +26,12 @@ namespace WeatherForecastAPI.Worker
                 CreationDate = Convert.ToDateTime(DateTime.Now.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss")),
                 Forecasts = new List<ForecastsG>()
             };
-            foreach (var x in weatherinfo.forecastTimestamps)
+            foreach (var forecast in weatherinfo.forecastTimestamps)
             {
                 ForecastsG item = new ForecastsG
                 {
-                    ForecastTime = x.forecastTimeUtc,
-                    temperature = x.airTemperature
+                    ForecastTime = forecast.forecastTimeUtc,
+                    temperature = forecast.airTemperature
                 };
                 forecastGeneralized.Forecasts.Add(item);
             }
@@ -42,8 +42,8 @@ namespace WeatherForecastAPI.Worker
         {
             var client = _httpClientFactory.CreateClient(provider);
             var result = await client.GetStringAsync(path);
-            T MyClass = JsonConvert.DeserializeObject<T>(result);
-            return MyClass;
+            T myClass = JsonConvert.DeserializeObject<T>(result);
+            return myClass;
         }
     }
 }

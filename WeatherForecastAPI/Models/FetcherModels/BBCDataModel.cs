@@ -3,36 +3,7 @@
 namespace WeatherForecastAPI.Models
 {
     // Root myDeserializedClass = JsonConvert.DeserializeObject(myJsonResponse); 
-    public class Xml
-    {
-        public string version { get; set; }
-        public string encoding { get; set; }
-
-    }
-
-    public class AtomLink
-    {
-        public string href { get; set; }
-        public string type { get; set; }
-        public string rel { get; set; }
-
-    }
-
-    public class Image
-    {
-        public string title { get; set; }
-        public string url { get; set; }
-        public string link { get; set; }
-
-    }
-
-    public class Guid
-    {
-        public string isPermaLink { get; set; }
-        public string text { get; set; } 
-
-    }
-
+   
     public class Item
     {
         //public string title { get; set; }

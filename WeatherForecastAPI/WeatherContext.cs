@@ -15,6 +15,9 @@ namespace WeatherForecastAPI
         public DbSet<Providers> Providers { get; set; }
         public DbSet<UniqueProviderID> CityProviderID { get; set; }
         public DbSet<ActualTemperature> ActualTemperatures { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<UserSettings> UserSettings { get; set; }
+        public DbSet<FavoriteCities> FavoriteCities { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -23,6 +26,7 @@ namespace WeatherForecastAPI
             builder.ApplyConfiguration(new CitiesConfiguration());
             builder.ApplyConfiguration(new ProvidersConfiguration());
             builder.ApplyConfiguration(new UniqueProviderIDConfiguration());
+            builder.ApplyConfiguration(new FavoriteCitiesConfiguration());
         }
     }
 }

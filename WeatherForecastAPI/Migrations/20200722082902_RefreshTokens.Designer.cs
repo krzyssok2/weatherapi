@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WeatherForecastAPI;
 
 namespace WeatherForecastAPI.Migrations
 {
     [DbContext(typeof(WeatherContext))]
-    partial class WeatherContextModelSnapshot : ModelSnapshot
+    [Migration("20200722082902_RefreshTokens")]
+    partial class RefreshTokens
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -256,28 +258,6 @@ namespace WeatherForecastAPI.Migrations
                     b.ToTable("Cities");
                 });
 
-            modelBuilder.Entity("WeatherForecastAPI.Entities.FavoriteCities", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<long?>("CityId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("UserId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CityId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("FavoriteCities");
-                });
-
             modelBuilder.Entity("WeatherForecastAPI.Entities.Forecasts", b =>
                 {
                     b.Property<long>("Id")
@@ -325,7 +305,6 @@ namespace WeatherForecastAPI.Migrations
             modelBuilder.Entity("WeatherForecastAPI.Entities.RefreshToken", b =>
                 {
                     b.Property<string>("Token")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("CreationDate")
@@ -376,24 +355,6 @@ namespace WeatherForecastAPI.Migrations
                     b.HasIndex("ProviderId");
 
                     b.ToTable("CityProviderID");
-                });
-
-            modelBuilder.Entity("WeatherForecastAPI.Entities.UserSettings", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<int>("Units")
-                        .HasColumnType("int");
-
-                    b.Property<string>("User")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("UserSettings");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -452,19 +413,6 @@ namespace WeatherForecastAPI.Migrations
                     b.HasOne("WeatherForecastAPI.Entities.Cities", null)
                         .WithMany("ActualTemparture")
                         .HasForeignKey("CitiesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("WeatherForecastAPI.Entities.FavoriteCities", b =>
-                {
-                    b.HasOne("WeatherForecastAPI.Entities.Cities", "City")
-                        .WithMany("FavoritedByUser")
-                        .HasForeignKey("CityId");
-
-                    b.HasOne("WeatherForecastAPI.Entities.UserSettings", "User")
-                        .WithMany("FavoriteCities")
-                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

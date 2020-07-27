@@ -4,13 +4,6 @@ using System.Collections.Generic;
 namespace WeatherForecastAPI.Models
 {
     // Root myDeserializedClass = JsonConvert.DeserializeObject(myJsonResponse); 
-    public class Options
-    {
-        public string location_id { get; set; }
-        public string day { get; set; }
-        public string locale { get; set; }
-
-    }
 
     public class Report
     {
@@ -98,14 +91,6 @@ namespace WeatherForecastAPI.Models
 
     }
 
-    public class Summary
-    {
-        public DateTime issueDate { get; set; }
-        public DateTime lastUpdated { get; set; }
-        public Report2 report { get; set; }
-
-    }
-
     public class ForecastOWN
     {
         public Detailed detailed { get; set; }
@@ -131,12 +116,6 @@ namespace WeatherForecastAPI.Models
         //public DateTime lastUpdated { get; set; }
         public Location location { get; set; }
         //public bool night { get; set; }
-
-    }
-
-    public class FeatureFlags
-    {
-        public bool useAlgorithmicText { get; set; }
 
     }
 

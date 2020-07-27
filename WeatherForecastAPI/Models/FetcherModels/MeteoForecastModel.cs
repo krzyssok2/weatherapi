@@ -20,11 +20,6 @@ namespace WeatherForecastAPI.Models
         //public Coordinates coordinates { get; set; }
 
     }
-    public class Coordinates
-    {
-        public double latitude { get; set; }
-        public double longitude { get; set; }
-    }
     public class ForecastTimestamps
     {
         public DateTime forecastTimeUtc { get; set; }

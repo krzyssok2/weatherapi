@@ -6,11 +6,15 @@ using WeatherForecastAPI.Models;
 using WeatherForecastAPI.Entities;
 using System.Net.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication;
 using Serilog;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace WeatherForecastAPI.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class WeatherController : ControllerBase
     {
         private WeatherContext _context;
@@ -25,7 +29,8 @@ namespace WeatherForecastAPI.Controllers
         /// <summary>
         /// Get stdev of the city
         /// </summary>
-        [HttpGet("stdev/{CityId}")]
+        [Authorize]
+        [HttpGet("stdev/{cityId}")]
         public ActionResult<AllStdevs> GetAllStdevsFrom(long cityId, DateTime fromDate, DateTime toDate)
         {
             if (fromDate == default)
@@ -51,7 +56,7 @@ namespace WeatherForecastAPI.Controllers
             var forecasts = GetForecasts(fromDate, toDate, cityId);
             var actualTemperature = GetActualTemperatures(fromDate, toDate, cityId);
             var averageActualTemperature = actualTemperature.Average(i =>(double?) i.Temperature);
-            var providers = GetProvidersWithStdevs(fromDate, toDate, cityId, actualTemperature, forecasts, averageActualTemperature);
+            var providers = GetProvidersWithStdevs(actualTemperature, forecasts, averageActualTemperature);
 
             AllStdevs allStdevs = new AllStdevs
             {
@@ -86,7 +91,7 @@ namespace WeatherForecastAPI.Controllers
         /// <summary>
         /// Get City average
         /// </summary>
-        [HttpGet("average/{CityId}")]
+        [HttpGet("average/{cityId}")]
         public ActionResult<WeatherCityAverage> GetCityAverage(long cityId, DateTime fromDate, DateTime toDate)
         {
             if (fromDate == default)
@@ -146,7 +151,7 @@ namespace WeatherForecastAPI.Controllers
         /// <summary>
         /// Gets forecast for specific city
         /// </summary>
-        [HttpGet("{CityId}")]
+        [HttpGet("{cityId}")]
         public ActionResult<WeatherRawForecasts> GetAllForecasts(long cityId, DateTime fromDate, DateTime toDate)
         {
             if (fromDate == default)
@@ -242,7 +247,7 @@ namespace WeatherForecastAPI.Controllers
             return Math.Sqrt((double)(sum / count));
 
         }
-        List<StdevsProviders> GetProvidersWithStdevs(DateTime fromDate, DateTime toDate, long cityId, List<ActualTemperature> actualTemperature, List<Forecasts> forecasts, double? averageActualTemperature)
+        List<StdevsProviders> GetProvidersWithStdevs(List<ActualTemperature> actualTemperature, List<Forecasts> forecasts, double? averageActualTemperature)
         {
             List<StdevsProviders> providers = forecasts
                 .GroupBy(forecast => forecast.Provider)
@@ -265,10 +270,10 @@ namespace WeatherForecastAPI.Controllers
         List<Forecasts> GetForecasts(DateTime fromDate, DateTime toDate, long cityId)
         {
             var forecasts = _context.Forecasts
-                .Where(forecastInfo =>
-                   forecastInfo.CitiesId == cityId
-                && forecastInfo.ForecastTime.Date >= fromDate.Date
-                && forecastInfo.ForecastTime.Date <= toDate.Date)
+                .Where(f =>
+                   f.CitiesId == cityId
+                && f.ForecastTime.Date >= fromDate.Date
+                && f.ForecastTime.Date <= toDate.Date)
                 .AsNoTracking()
                 .ToList();
             return forecasts;
@@ -276,10 +281,10 @@ namespace WeatherForecastAPI.Controllers
         List<ActualTemperature> GetActualTemperatures(DateTime fromDate, DateTime toDate, long cityId)
         {
             var actualTemperature = _context.ActualTemperatures
-                .Where(ActualTemperature =>
-                   ActualTemperature.CitiesId == cityId
-                && ActualTemperature.ForecastTime.Date >= fromDate.Date
-                && ActualTemperature.ForecastTime.Date <= toDate.Date)
+                .Where(at =>
+                   at.CitiesId == cityId
+                && at.ForecastTime.Date >= fromDate.Date
+                && at.ForecastTime.Date <= toDate.Date)
                 .AsNoTracking()
                 .ToList();
             return actualTemperature;
