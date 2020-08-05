@@ -1,47 +1,41 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity.UI.V3.Pages.Internal.Account.Manage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using WeatherForecastAPI.Entities;
-using WeatherForecastAPI.Migrations;
 using WeatherForecastAPI.Models;
+using WeatherForecastAPI.Models.Swagger;
+using WeatherForecastAPI.Services;
 
 namespace WeatherForecastAPI.Controllers
 {
+    [ApiController]
     [Route("api/[controller]")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public class SettingsController: ControllerBase
+    public class SettingsController : ControllerBase
     {
         private readonly WeatherContext _context;
+        private readonly SettingsServices service;
         public SettingsController(WeatherContext context)
         {
             _context = context;
+            service = new SettingsServices();
         }
 
         /// <summary>
-        ///User's favorite cities 
+        ///User's favorite cities
         /// </summary>
         /// <returns></returns>
         [HttpGet("favorite-cities")]
-        public ActionResult<AllPreferedCities> GettingFavoriteCities()
+        public ActionResult<AllPreferedCities> GetFavoriteCities()
         {
-            AllPreferedCities prefferedCities = new AllPreferedCities();
+            var prefferedCities = new AllPreferedCities();
 
             var userName = User.Claims.Where(a => a.Type == System.Security.Claims.ClaimTypes.NameIdentifier).FirstOrDefault().Value;
-            var cities = _context.FavoriteCities
-                .Where(i => i.User.User == userName)
-                .Select(i => new PreferedCities
-                {
-                    CityId=i.City.Id,
-                    CityName=i.City.Name,
-                    Country=i.City.Country
-                }).ToList();
+
+            var cities = service.GetPreferedCities(_context.FavoriteCities.Include(i=>i.City).Include(i=>i.User).ToList(), userName);
+
             var preferedCities = new AllPreferedCities
             {
                 PreferedCities = cities
@@ -53,7 +47,7 @@ namespace WeatherForecastAPI.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpPut("favorite-cities")]
-        public ActionResult<AllPreferedCities> PutPreferedCities([FromBody] InsertCities insertCities)
+        public ActionResult PutPreferedCities([FromBody] InsertCities insertCities)
         {
             var userName = User.Claims.Where(a => a.Type == System.Security.Claims.ClaimTypes.NameIdentifier).FirstOrDefault().Value;
             var settings = _context.UserSettings.Include(x => x.FavoriteCities).FirstOrDefault(x => x.User == userName);
@@ -63,6 +57,7 @@ namespace WeatherForecastAPI.Controllers
             var cities = _context.Cities.ToList();
             foreach (var city in insertCities.CitiesId)
             {
+                if (cities.FirstOrDefault(i => i.Id == city.CityId) == null) continue;
                 settings.FavoriteCities.Add(new FavoriteCities
                 {
                     UserId = settings.Id,
@@ -71,25 +66,30 @@ namespace WeatherForecastAPI.Controllers
             }
 
             _context.SaveChanges();
-            AllPreferedCities preferedCities = new AllPreferedCities();
             return Ok();
         }
         /// <summary>
         /// Delete city from your favorite list
         /// </summary>
+        /// <response code="200">Success</response>   
         [HttpDelete("favorite-cities/{CityId}")]
-        public ActionResult<AllPreferedCities> DeletePreferedCity(long CityId)
+        [ProducesResponseType(typeof(CityErrorsResponse), 400)]
+        public ActionResult DeletePreferedCity(long CityId)
         {
             var userId = User.Claims.Where(a => a.Type == System.Security.Claims.ClaimTypes.NameIdentifier).FirstOrDefault().Value;
 
             var city = _context.Cities.Where(c => c.Id == CityId).FirstOrDefault();
-            if (city == null) return BadRequest("Such City Doesnt exist");
+            if (city == null)
+            {
+                return BadRequest(new CityErrorsResponse
+                {
+                    Error = CityErrors.NoDataFound
+                });
+            }
 
             var user = _context.UserSettings.First(u => u.User == userId);
-
-            var deletethis = _context.FavoriteCities.Where(fc => fc.City == city && fc.User == user).FirstOrDefault();
-
-            var delete = _context.FavoriteCities.Remove(deletethis);
+            var deletecity = _context.FavoriteCities.Where(fc => fc.City == city && fc.User == user).FirstOrDefault();
+            var delete = _context.FavoriteCities.Remove(deletecity);
 
             _context.SaveChanges();
 
@@ -103,34 +103,38 @@ namespace WeatherForecastAPI.Controllers
         public ActionResult<Settings> GetAllSettings()
         {
             var userName = User.Claims.Where(a => a.Type == System.Security.Claims.ClaimTypes.NameIdentifier).FirstOrDefault().Value;
+
             Settings settings = _context.UserSettings
                 .Where(i => i.User == userName)
                 .Select(i => new Settings
                 {
-                    PreferedUnit=i.Units,
-                    FavoriteCities = i.FavoriteCities.Select(j=> new PreferedCities
+                    PreferedUnit = i.Units,
+                    FavoriteCities = i.FavoriteCities.Select(j => new PreferedCities
                     {
-                        CityId=j.City.Id,
-                        CityName=j.City.Name,
-                        Country=j.City.Country
+                        CityId = j.City.Id,
+                        CityName = j.City.Name,
+                        Country = j.City.Country
                     }).ToList()
                 }).First();
             return Ok(settings);
+
         }
         /// <summary>
         /// Update all settings
         /// </summary>
         /// <returns></returns>
         [HttpPut("")]
-        public ActionResult UpdateAllSettings([FromBody]InsertSettings insertSettings)
+        public ActionResult UpdateAllSettings([FromBody] InsertSettings insertSettings)
         {
             var userName = User.Claims.Where(a => a.Type == System.Security.Claims.ClaimTypes.NameIdentifier).FirstOrDefault().Value;
-            var settings = _context.UserSettings.Include(x => x.FavoriteCities).FirstOrDefault(x => x.User == userName);
+            var settings = _context.UserSettings.Include(x => x.FavoriteCities).Include(i=>i.User).FirstOrDefault(x => x.User == userName);
             settings.FavoriteCities.Clear();
 
             var cities = _context.Cities.ToList();
+
             foreach (var city in insertSettings.CitiesId)
             {
+                if (cities.FirstOrDefault(i => i.Id == city.CityId) == null) continue;
                 settings.FavoriteCities.Add(new FavoriteCities
                 {
                     UserId = settings.Id,
@@ -140,9 +144,7 @@ namespace WeatherForecastAPI.Controllers
             settings.Units = insertSettings.Units;
 
             _context.SaveChanges();
-            AllPreferedCities preferedCities = new AllPreferedCities();
             return Ok();
         }
-
     }
 }

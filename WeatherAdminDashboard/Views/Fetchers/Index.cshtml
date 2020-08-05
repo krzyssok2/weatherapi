@@ -1,0 +1,24 @@
+﻿@{ Layout = "~/Views/Shared/AdminLTE/_Layout.cshtml";
+    ViewBag.Title = "Fetchers"; }
+
+<h1>Search City and Get Weather Forecast</h1>
+
+<form method="post" asp-controller="Fetchers" asp-action="Forecast" asp-route-city="City" asp-route-provider="Provider">
+    <div>
+        <strong>City Name     :</strong>
+        <select class="form-control" name="City">
+            <option value="Vilnius">Vilnius</option>
+            <option value="Kaunas">Kaunas</option>
+        </select>
+
+        <strong>Provider Name :</strong>
+
+        <select class="form-control" name="Provider">
+            <option value="BBC">BBC</option>
+            <option value="METEO">METEO</option>
+            <option value="OWM">OWM</option>
+        </select>
+        <br />
+        <button class="btn btn-block btn-primary" type="submit"><strong/>Get Current Temperature</button>
+    </div>
+</form>

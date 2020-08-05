@@ -1,24 +1,26 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
+using System.Text.Json.Serialization;
+using Microsoft.IdentityModel.Tokens;
+using Swashbuckle.AspNetCore.Filters;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using WeatherForecastAPI.Models;
-using Microsoft.OpenApi.Models;
-using System.Text.Json.Serialization;
-using System.Reflection;
-using System.IO;
-using System;
-using Microsoft.EntityFrameworkCore;
-using WeatherForecastAPI.Worker;
+using FluentValidation.AspNetCore;
 using System.Collections.Generic;
 using WeatherForecastAPI.Options;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
+using WeatherForecastAPI.Worker;
+using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Mvc;
+using System.Reflection;
 using System.Text;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
-using Newtonsoft.Json.Converters;
+using System.Linq;
+using System.IO;
+using System;
+using WeatherForecastAPI.ErrorHandler;
 
 namespace WeatherForecastAPI
 {
@@ -36,12 +38,6 @@ namespace WeatherForecastAPI
         {
             services.AddDbContext<WeatherContext>(options => options.UseSqlServer(Configuration.GetConnectionString("MyWeatherAPIDatabase")));
             services.AddIdentity<IdentityUser, IdentityRole>().AddEntityFrameworkStores<WeatherContext>().AddDefaultTokenProviders();
-            services.AddControllers()
-            .AddJsonOptions(opts =>
-            {
-                opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-            });
-            services.AddDbContext<WeatherContext>(options => options.UseSqlServer(Configuration.GetConnectionString("MyWeatherApi")));
 
             var jwtSettings = new JwtSettings();
             Configuration.Bind(nameof(jwtSettings), jwtSettings);
@@ -91,6 +87,8 @@ namespace WeatherForecastAPI
 
             });
 
+
+
             services.AddSwaggerGen(x =>
             {
                 x.SwaggerDoc("v1", new OpenApiInfo { Title = "Weather API", Version = "v1" });
@@ -102,21 +100,33 @@ namespace WeatherForecastAPI
                 {
                     {"Bearer", new string[0] }
                 };
-                x.AddSecurityDefinition(name: "Bearer", new OpenApiSecurityScheme
+
+                var scheme = new OpenApiSecurityScheme
                 {
                     Description = "JWT Authorization header using the bearer scheme",
                     Name = "Authorization",
                     In = ParameterLocation.Header,
-                    Type = SecuritySchemeType.ApiKey
-                });
-                x.AddSecurityRequirement(new OpenApiSecurityRequirement
-                {
-                    {new OpenApiSecurityScheme{Reference = new OpenApiReference
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT",
+                    Reference = new OpenApiReference
                     {
-                        Id = "Bearer",
+                        Id = JwtBearerDefaults.AuthenticationScheme,
                         Type = ReferenceType.SecurityScheme
-                    }}, new List<string>()}
-                });
+                    }
+                };
+
+                x.AddSecurityDefinition(name: "Bearer", scheme);
+                //x.AddSecurityRequirement(new OpenApiSecurityRequirement
+                //{
+                //    {new OpenApiSecurityScheme{Reference = new OpenApiReference
+                //    {
+                //        Id = "Bearer",
+                //        Type = ReferenceType.SecurityScheme
+                //    }}, new List<string>()}
+                //});
+                x.OperationFilter<SecurityRequirementsOperationFilter>(true, scheme.Reference.Id);//Doesn't recognize bearer then
+
             });
             
             services.AddTransient<IHostedService, FetcherService>();
@@ -130,11 +140,17 @@ namespace WeatherForecastAPI
             //Get List of all Ifetcher Interfaces
             services.AddScoped<List<IFetcher>>();
 
-            services.AddControllers().AddNewtonsoftJson(options =>
-            options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
-
-            services.AddControllersWithViews()
-                .AddNewtonsoftJson(options => options.SerializerSettings.Converters.Add(new StringEnumConverter()));
+            services.AddControllers()
+                .ConfigureApiBehaviorOptions(options=>
+                {
+                    options.InvalidModelStateResponseFactory =
+                    c => new BadRequestObjectResult(new { Errors = c.ModelState.Values.SelectMany(x => x.Errors.Select(x => x.ErrorMessage)) });
+                })
+                .AddFluentValidation(mvcConfiguration => mvcConfiguration.RegisterValidatorsFromAssemblyContaining<Startup>())
+                .AddJsonOptions(opts =>
+                {
+                    opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -144,46 +160,28 @@ namespace WeatherForecastAPI
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            //app.ConfigureExceptionHandler();
+
+            app.UseMiddleware<ExceptionMiddleware>();
+
             app.UseSwagger();
 
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "V1");
             });
 
             app.UseHttpsRedirection();
 
             app.UseRouting();
-
-            app.UseAuthorization();
-
-            //app.Map("/weatherforecast", Page1);
-
-            
+            app.UseAuthentication();
+            app.UseAuthorization();        
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
             });
         }
-        //private static void Page1(IApplicationBuilder app)
-        //{
-
-        //    app.Use(async (context, next) =>
-        //    {
-
-        //        await context.Response.WriteAsync("<p>FastLinks</p>" +
-        //            "<a href='/api/cities'>Go api cities</a>" +
-        //            "<p></p>" +
-        //            "<a href='/api/weather'>Go to api weather</a>" +
-        //            "<p></p>" +
-        //            "<a href='/api/Users'>Go to Users</a>" +
-        //            "<p></p>" +
-        //            "<a href='/swagger'>Go to Swagger</a>" +
-        //            "<p style=\"color:#808000;\">============================================</p>");
-        //        await next();
-        //    });
-        //}
-
     }
 }

@@ -126,5 +126,7 @@ namespace WeatherForecastAPI.Worker
         {
             _timer?.Dispose();
         }
+
+
     }
 }

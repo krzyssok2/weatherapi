@@ -1,0 +1,72 @@
+﻿@using static AdminLTE.MVC.Helpers.NavigationIndicatorHelper;
+<aside class="main-sidebar sidebar-dark-primary elevation-4">
+    <a href="~/Home" class="brand-link">
+        <i class="fas fa-cloud-sun" style="opacity: .8"></i>
+        <span class="brand-text font-weight-light">  Admin Dashboard</span>
+    </a>
+    <div class="sidebar">
+        @if (User.Identity.IsAuthenticated)
+        {
+<div class="user-panel mt-3 pb-3 mb-3 d-flex">
+    <div class="image">
+        <img src="~/img/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image">
+    </div>
+    <div class="info">
+        <a href="#" class="d-block">Logged as: @User.Identity.Name </a>
+    </div>
+</div> }
+            else
+            {
+<div class="user-panel mt-3 pb-3 mb-3 d-flex">
+    <div class="info">
+        <a href="#" class="d-block">Logged as: Visitor</a>
+    </div>
+</div>}
+        <nav class="mt-2">
+            <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                <li class="nav-item ">
+                    <a asp-controller="Home" asp-action="Index" class="nav-link @Url.MakeActiveClass("home","index")">
+                        <i class="nav-icon fas fa-home"></i>
+                        <p>
+                            Home
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item ">
+                    <a asp-controller="UserManager" asp-action="Index" class="nav-link @Url.MakeActiveClass("UserManager","index")">
+                        <i class="nav-icon fas fa-address-card"></i>
+                        <p>
+                            User Manager
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item ">
+                    <a asp-controller="Fetchers" asp-action="Index" class="nav-link @Url.MakeActiveClass("Fetchers","index")">
+                        <i class="nav-icon fas fa-umbrella"></i>
+                        <p>
+                            Fetchers
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item ">
+                    <a asp-controller="Statistics" asp-action="Index" class="nav-link @Url.MakeActiveClass("Statistics","index")">
+                        <i class="nav-icon fas fa-chart-pie"></i>
+                        <p>
+                            Statistics
+                        </p>
+                    </a>
+                </li>
+                @if (User.Identity.IsAuthenticated)
+                {
+            <li class="nav-item ">
+                <a asp-controller="Home" asp-action="Privacy" class="nav-link @Url.MakeActiveClass("home","privacy")">
+                    <i class="nav-icon fas fa-lock"></i>
+                    <p>
+                        Privacy
+                    </p>
+                </a>
+            </li>}
+            </ul>
+        </nav>
+    </div>
+</aside>

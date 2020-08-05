@@ -3,8 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using WeatherForecastAPI.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using WeatherForecastAPI.Models.Swagger;
+
 namespace WeatherForecastAPI.Controllers
 {
+    [ApiController]
     [Route("api/[controller]")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class CitiesController : ControllerBase
@@ -12,7 +15,6 @@ namespace WeatherForecastAPI.Controllers
         /// <summary>
         /// Gets All cities
         /// </summary>
-        /// private WeatherContext _context;
         private readonly WeatherContext _context;
         public CitiesController(WeatherContext context)
         {
@@ -22,9 +24,11 @@ namespace WeatherForecastAPI.Controllers
         /// Get list of all cities
         /// </summary>
         [HttpGet]
+        [ProducesResponseType(typeof(CitiesResponseModel), 200)]
+        [ProducesResponseType(typeof(CityErrorsResponse), 400)]
         public ActionResult<CitiesResponseModel> GetAllCities()
         {
-            CitiesResponseModel allCities = new CitiesResponseModel
+            var allCities = new CitiesResponseModel
             {
                 Cities = _context.Cities.Select(cityInfo => new CityInfoResponseModel
                 {
@@ -35,7 +39,14 @@ namespace WeatherForecastAPI.Controllers
                     ToDate = cityInfo.Forecasts.Max(i => i.ForecastTime)
                 }).ToList()
             };
-            return allCities;
+            if(allCities.Cities.Count()==0)
+            {
+                return BadRequest(new ErrorHandlingModel
+                {
+                    Error = HandlingErrors.NoDataFound
+                });
+            }
+            return Ok(allCities);
         }
     }
 }

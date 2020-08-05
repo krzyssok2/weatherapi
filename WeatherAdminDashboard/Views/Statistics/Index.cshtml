@@ -1,0 +1,40 @@
+﻿@{ ViewData["Title"] = "Home Page";
+                Layout = "~/Views/Shared/AdminLTE/_Layout.cshtml"; }
+
+    <div class="text-center">
+        <h1 class="display-4">Statistics</h1>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-6">             
+                    <!-- PIE CHART -->
+                    <div class="card card-danger">
+                        <div class="card-header">
+                            <h3 class="card-title">Pie Chart</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div>
+                            <canvas id="pieChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%; display: block; width: 503px;" width="691" height="343" class="chartjs-render-monitor"></canvas>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <!-- BAR CHART -->
+                    <div class="card card-success">
+                        <div class="card-header">
+                            <h3 class="card-title">Bar Chart</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart">
+                                <div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div>
+                                <canvas id="barChart" style="min-height: 250px; height: 249px; max-height: 250px; max-width: 100%; display: block; width: 503px;" width="691" height="342" class="chartjs-render-monitor"></canvas>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>

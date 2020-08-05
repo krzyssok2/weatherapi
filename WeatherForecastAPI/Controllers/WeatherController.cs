@@ -6,23 +6,25 @@ using WeatherForecastAPI.Models;
 using WeatherForecastAPI.Entities;
 using System.Net.Http;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication;
 using Serilog;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using WeatherForecastAPI.Models.Swagger;
+using WeatherForecastAPI.Services;
 
 namespace WeatherForecastAPI.Controllers
 {
+    [ApiController]
     [Route("api/[controller]")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class WeatherController : ControllerBase
     {
-        private WeatherContext _context;
-        private readonly IHttpClientFactory _httpClientFactory;
-        public WeatherController(WeatherContext context, IHttpClientFactory httpClientFactory)
+        private readonly WeatherContext _context;
+        private readonly WeatherServices service;
+        public WeatherController(WeatherContext context)
         {
             _context = context;
-            _httpClientFactory = httpClientFactory;
+            service = new WeatherServices();
         }
 
 
@@ -31,6 +33,8 @@ namespace WeatherForecastAPI.Controllers
         /// </summary>
         [Authorize]
         [HttpGet("stdev/{cityId}")]
+        [ProducesResponseType(typeof(WeatherErrorsResponse), 400)]
+        [ProducesResponseType(typeof(AllStdevs), 200)]
         public ActionResult<AllStdevs> GetAllStdevsFrom(long cityId, DateTime fromDate, DateTime toDate)
         {
             if (fromDate == default)
@@ -48,17 +52,15 @@ namespace WeatherForecastAPI.Controllers
                 Log.Error($"No data was provided for city with Id {cityId} as time period was too big {fromDate.Date} - {toDate.Date}");
                 return BadRequest(new ErrorHandlingModel
                 {
-                    Error = 400,
-                    Message = "Bad Request",
-                    Description = "Time between days can't be negative or be higher than 14"
+                    Error = HandlingErrors.TimeSpanTooLong
                 });
             }
-            var forecasts = GetForecasts(fromDate, toDate, cityId);
-            var actualTemperature = GetActualTemperatures(fromDate, toDate, cityId);
+            var forecasts = service.GetForecasts(fromDate, toDate, cityId, _context.Forecasts.ToList());
+            var actualTemperature = service.GetActualTemperatures(fromDate, toDate, cityId, _context.ActualTemperatures.ToList());
             var averageActualTemperature = actualTemperature.Average(i =>(double?) i.Temperature);
-            var providers = GetProvidersWithStdevs(actualTemperature, forecasts, averageActualTemperature);
+            var providers = service.GetProvidersWithStdevs(actualTemperature, forecasts, averageActualTemperature);
 
-            AllStdevs allStdevs = new AllStdevs
+            var allStdevs = new AllStdevs
             {
                 CityId = cityId,
                 FromDate = fromDate,
@@ -78,12 +80,9 @@ namespace WeatherForecastAPI.Controllers
             if (allStdevs.Providers.Count == 0) 
             {
                 Log.Error($"No stdev data was found for city with ID {cityId} within period {fromDate.Date} - {toDate.Date}");
-                return NotFound(new ErrorHandlingModel
+                return BadRequest(new ErrorHandlingModel
                 {
-                    Error= 404,
-                    Message="Not Found",
-                    Description="No data was found in given period"
-                    
+                    Error = HandlingErrors.NoDataFound
                 });
             }
             return Ok(allStdevs);
@@ -92,6 +91,8 @@ namespace WeatherForecastAPI.Controllers
         /// Get City average
         /// </summary>
         [HttpGet("average/{cityId}")]
+        [ProducesResponseType(typeof(WeatherCityAverage), 200)]
+        [ProducesResponseType(typeof(WeatherErrorsResponse), 400)]
         public ActionResult<WeatherCityAverage> GetCityAverage(long cityId, DateTime fromDate, DateTime toDate)
         {
             if (fromDate == default)
@@ -109,41 +110,25 @@ namespace WeatherForecastAPI.Controllers
                 Log.Error($"No data was provided for city with Id {cityId} as time period was too big {fromDate.Date} - {toDate.Date}");
                 return BadRequest(new ErrorHandlingModel
                 {
-                    Error = 400,
-                    Description = "Bad Request",
-                    Message = "Time between days can't be negative or be higher than 14"
+                    Error = HandlingErrors.TimeSpanTooLong
                 });
             }
 
-            var average =
-                _context.Forecasts
-                .Where(forecastInfo => forecastInfo.CitiesId == cityId
-                && forecastInfo.ForecastTime.Date >= fromDate.Date
-                && forecastInfo.ForecastTime.Date <= toDate.Date)
-                .GroupBy(forecast => forecast.ForecastTime.Date)
-                .Select(grouped => new CityAverageByDay
-                {
-                    Date = grouped.Key,
-                    Average = grouped.Average(average => average.Temperature)
-                })
-                .OrderBy(Average => Average.Date)
-                .ToList();
+            var cityAverageByDay = service.GetCityAverageByDay(fromDate, toDate, cityId, _context.Forecasts.ToList());
 
             var result = new WeatherCityAverage
             {
                 CityId = cityId,
                 FromDate = fromDate.Date,
                 ToDate = toDate.Date,
-                Average = average
+                Average = cityAverageByDay
             };
             if (result.Average.Count == 0)
             {
                 Log.Error($"No averages found for city with ID {cityId} within period {fromDate.Date} - {toDate.Date}");
-                return NotFound(new ErrorHandlingModel
+                return BadRequest(new ErrorHandlingModel
                 {
-                    Error = 404,
-                    Message = "Not Found",
-                    Description = "No data was found in given period"
+                    Error = HandlingErrors.NoDataFound
                 });
             }
             return Ok(result);
@@ -152,6 +137,8 @@ namespace WeatherForecastAPI.Controllers
         /// Gets forecast for specific city
         /// </summary>
         [HttpGet("{cityId}")]
+        [ProducesResponseType(typeof(WeatherRawForecasts), 200)]
+        [ProducesResponseType(typeof(WeatherErrorsResponse), 400)]
         public ActionResult<WeatherRawForecasts> GetAllForecasts(long cityId, DateTime fromDate, DateTime toDate)
         {
             if (fromDate == default)
@@ -169,40 +156,13 @@ namespace WeatherForecastAPI.Controllers
                 Log.Error($"No data was provided for city with Id {cityId} as time period was too big {fromDate.Date} - {toDate.Date}");
                 return BadRequest(new ErrorHandlingModel
                 {
-                    Error = 400,
-                    Message = "Bad Request",
-                    Description = "Time between days can't be negative or be higher than 14"
+                    Error = HandlingErrors.TimeSpanTooLong
                 });
             }
-            var providersWithForecasts = _context.Forecasts
-                .Where(forecastInfo => forecastInfo.CitiesId == cityId
-                && forecastInfo.ForecastTime.Date >= fromDate.Date 
-                && forecastInfo.ForecastTime.Date <= toDate.Date)
-                .ToList()
-                .GroupBy(forecast => forecast.Provider)
-                .Select(forecasts => new ForecastProvider
-                {
-                    ProviderName = forecasts.Key,
-                    Forcasts = forecasts.Select(forecast => new RawData
-                    {
-                        Date = forecast.ForecastTime,
-                        Temperature = forecast.Temperature
-                    })
-                    .OrderBy(order=> order.Date)
-                    .ToList()
-                }).ToList();
 
-            var actualTemperature = _context.ActualTemperatures
-                .Where(actualTemperature => actualTemperature.CitiesId == cityId
-                && actualTemperature.ForecastTime >= fromDate.Date 
-                && actualTemperature.ForecastTime <= toDate.Date)
-                .Select(actualTemprature=> new FactualTemperature
-                {
-                    Date= actualTemprature.ForecastTime,
-                    Temperature= actualTemprature.Temperature
-                })
-                .OrderBy(temperature=> temperature.Date)
-                .ToList();
+            var providersWithForecasts = service.GetProvidersWithForecasts(fromDate, toDate, cityId, _context.Forecasts.ToList());
+
+            var actualTemperature = service.GetActualTemperaturesTransformed(fromDate, toDate, cityId, _context.ActualTemperatures.ToList());
 
             var forecasts = new WeatherRawForecasts
             {
@@ -215,79 +175,12 @@ namespace WeatherForecastAPI.Controllers
             if (forecasts.Providers.Count == 0)
             {
                 Log.Error($"No raw data was found for city with ID {cityId} within period {fromDate.Date} - {toDate.Date}");
-                return NotFound( new ErrorHandlingModel
+                return BadRequest(new ErrorHandlingModel
                 {
-                    Error = 404,
-                    Message = "Not Found",
-                    Description = "No data was found in given period"
+                    Error = HandlingErrors.NoDataFound
                 });
-            }
-                
-
+            }            
             return Ok(forecasts);
-        }
-
-
-        double? GetStdev(double? averageActualTemperature, List<Forecasts> forecasts, DateTime date, string provider)
-        {
-
-            var mean = averageActualTemperature;
-
-            if (mean == null) return null;
-
-            var sum = forecasts
-                        .Where(i => i.ForecastTime.Date == date && i.Provider == provider)
-                        .Sum(i => i.Temperature - mean) * forecasts
-                        .Where(i => i.ForecastTime.Date == date && i.Provider == provider)
-                        .Sum(i => i.Temperature - mean);
-
-            var count = forecasts
-                .Where(i => i.ForecastTime.Date == date && i.Provider == provider).Count();
-
-            return Math.Sqrt((double)(sum / count));
-
-        }
-        List<StdevsProviders> GetProvidersWithStdevs(List<ActualTemperature> actualTemperature, List<Forecasts> forecasts, double? averageActualTemperature)
-        {
-            List<StdevsProviders> providers = forecasts
-                .GroupBy(forecast => forecast.Provider)
-                .Select(provider => new StdevsProviders
-                {
-                    ProviderName = provider.Key,
-                    Stdevs = forecasts
-                    .GroupBy(forecast => forecast.ForecastTime.Date)
-                    .Select(Date => new StdevsFactualAndAverage
-                    {
-                        Date = Date.Key,
-                        Factual = actualTemperature
-                        .Where(forecast => forecast.ForecastTime.Date == Date.Key)
-                        .Average(forecast => (double?)forecast.Temperature),
-                        Stdev = GetStdev(averageActualTemperature, forecasts, Date.Key, provider.Key)
-                    }).ToList(),
-                }).ToList();
-            return providers;
-        }
-        List<Forecasts> GetForecasts(DateTime fromDate, DateTime toDate, long cityId)
-        {
-            var forecasts = _context.Forecasts
-                .Where(f =>
-                   f.CitiesId == cityId
-                && f.ForecastTime.Date >= fromDate.Date
-                && f.ForecastTime.Date <= toDate.Date)
-                .AsNoTracking()
-                .ToList();
-            return forecasts;
-        }
-        List<ActualTemperature> GetActualTemperatures(DateTime fromDate, DateTime toDate, long cityId)
-        {
-            var actualTemperature = _context.ActualTemperatures
-                .Where(at =>
-                   at.CitiesId == cityId
-                && at.ForecastTime.Date >= fromDate.Date
-                && at.ForecastTime.Date <= toDate.Date)
-                .AsNoTracking()
-                .ToList();
-            return actualTemperature;
         }
     }
 }

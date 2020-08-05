@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentValidation.AspNetCore" Version="9.0.1" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.2.7" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.6" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="3.1.6" />
@@ -27,6 +28,7 @@
     <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" />
     <PackageReference Include="Serilog.Sinks.MSSqlServer" Version="5.5.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="5.5.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="5.1.2" />
   </ItemGroup>
 
 	<PropertyGroup>

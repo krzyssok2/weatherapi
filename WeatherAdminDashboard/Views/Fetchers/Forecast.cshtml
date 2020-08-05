@@ -1,0 +1,21 @@
+﻿@model CityViewModel
+@{
+}
+@{ Layout = "~/Views/Shared/AdminLTE/_Layout.cshtml";
+    ViewBag.Title = "Forecast"; }
+
+<h1>Search City and Get Weather Forecast</h1>
+
+<div>
+    <h2>Weather Forecast</h2>
+    <table>
+        <tr>
+            <td>
+                <strong>City: @Model.CityName</strong>
+                <br/>
+                <strong>Provider: @Model.ProviderName</strong
+                @*<strong>City: @Html.DisplayFor(weather => weather.weather.City)</strong>*@
+            </td>
+        </tr>
+    </table>
+</div>

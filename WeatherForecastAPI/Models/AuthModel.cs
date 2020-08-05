@@ -1,12 +1,13 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace WeatherForecastAPI.Models
 {
-    public enum ErrorsList
+    public enum Errors
     {
         InvalidToken,
         TokenExpired,
@@ -20,15 +21,24 @@ namespace WeatherForecastAPI.Models
     }
     public class AuthAccount
     {
+        /// <example>email@gmail.com</example>
         public string Email { get; set; }
+        /// <example>Password567!</example>
         public string Password { get; set; }
     }
     public class AuthenticationResult
     {
+        public AuthenticationResult(Errors error)
+        {
+            Error = error;
+        }
+        public AuthenticationResult()
+        {
+        }
         public string Token { get; set; }
         public string RefreshToken { get; set; }
         public bool Success { get; set; }
-        public ErrorsList Errors { get; set; }
+        public Errors Error { get; set; }
     }
     public class AuthSuccessResponse
     {
@@ -42,6 +52,6 @@ namespace WeatherForecastAPI.Models
     }
     public class AuthFailedResponse
     {
-        public ErrorsList Errors { get; set; }
+        public Errors Error { get; set; }
     }
 }
