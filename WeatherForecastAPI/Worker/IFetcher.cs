@@ -3,7 +3,7 @@ using WeatherForecastAPI.Models;
 
 namespace WeatherForecastAPI
 {
-    interface IFetcher
+   public interface IFetcher
     {
         string ProviderName { get; }
         Task<ForecastGeneralized> GetData(string uniqueCityId, string cityName);

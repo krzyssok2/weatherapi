@@ -9,10 +9,15 @@ namespace WeatherForecastAPI.Validators
 {
     public class InsertSettingsValidator : AbstractValidator<InsertSettings>
     {
+        enum Errors
+        {
+            EnumDoesntExist
+        }
         public InsertSettingsValidator()
         {
             RuleFor(x => x.Units)
-                .IsInEnum();
+                .IsInEnum()
+                .WithMessage(Errors.EnumDoesntExist.ToString());
         }
     }
 }

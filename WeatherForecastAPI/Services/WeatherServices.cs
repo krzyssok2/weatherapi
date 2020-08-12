@@ -9,6 +9,11 @@ namespace WeatherForecastAPI.Services
 {
     public class WeatherServices
     {
+        WeatherContext _context { get; set; }
+        public WeatherServices(WeatherContext context)
+        {
+            _context = context;
+        }
         public double? GetStdev(double? averageActualTemperature, List<Forecasts> forecasts, DateTime date, string provider)
         {
 
@@ -47,9 +52,9 @@ namespace WeatherForecastAPI.Services
                 }).ToList();
             return result;
         }
-        public List<Forecasts> GetForecasts(DateTime fromDate, DateTime toDate, long cityId, List<Forecasts> forecasts)
+        public List<Forecasts> GetForecasts(DateTime fromDate, DateTime toDate, long cityId)
         {
-            var result = forecasts
+            var result = _context.Forecasts
                 .Where(f =>
                    f.CitiesId == cityId
                 && f.ForecastTime.Date >= fromDate.Date
@@ -57,9 +62,9 @@ namespace WeatherForecastAPI.Services
                 .ToList();
             return result;
         }
-        public List<ActualTemperature> GetActualTemperatures(DateTime fromDate, DateTime toDate, long cityId, List<ActualTemperature> ActualTemperature)
+        public List<ActualTemperature> GetActualTemperatures(DateTime fromDate, DateTime toDate, long cityId)
         {
-            var result = ActualTemperature
+            var result = _context.ActualTemperatures
                 .Where(at =>
                    at.CitiesId == cityId
                 && at.ForecastTime.Date >= fromDate.Date
@@ -68,10 +73,10 @@ namespace WeatherForecastAPI.Services
             return result;
         }
 
-        public List<CityAverageByDay> GetCityAverageByDay(DateTime fromDate, DateTime toDate, long cityId, List<Forecasts> forecasts)
+        public List<CityAverageByDay> GetCityAverageByDay(DateTime fromDate, DateTime toDate, long cityId)
         {
             var result =
-                forecasts
+                 _context.Forecasts
                 .Where(forecastInfo => forecastInfo.CitiesId == cityId
                 && forecastInfo.ForecastTime.Date >= fromDate.Date
                 && forecastInfo.ForecastTime.Date <= toDate.Date)
@@ -87,10 +92,10 @@ namespace WeatherForecastAPI.Services
             return result;
         }
 
-        public List<ForecastProvider> GetProvidersWithForecasts(DateTime fromDate, DateTime toDate, long cityId, List<Forecasts> forecasts)
+        public List<ForecastProvider> GetProvidersWithForecasts(DateTime fromDate, DateTime toDate, long cityId)
         {
             var result =
-                forecasts
+                _context.Forecasts
                 .Where(forecastInfo => forecastInfo.CitiesId == cityId
                 && forecastInfo.ForecastTime.Date >= fromDate.Date
                 && forecastInfo.ForecastTime.Date <= toDate.Date)
@@ -111,10 +116,10 @@ namespace WeatherForecastAPI.Services
             return result;
         }
 
-        public List<FactualTemperature> GetActualTemperaturesTransformed(DateTime fromDate, DateTime toDate, long cityId, List<ActualTemperature> actualTemperatures)
+        public List<FactualTemperature> GetActualTemperaturesTransformed(DateTime fromDate, DateTime toDate, long cityId)
         {
             var result =
-                actualTemperatures
+                _context.ActualTemperatures
                 .Where(actualTemperature => actualTemperature.CitiesId == cityId
                 && actualTemperature.ForecastTime >= fromDate.Date
                 && actualTemperature.ForecastTime <= toDate.Date)

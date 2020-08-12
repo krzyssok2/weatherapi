@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using WeatherForecastAPI.Models.Swagger;
 using WeatherForecastAPI.Services;
+using System.Xml.Schema;
 
 namespace WeatherForecastAPI.Controllers
 {
@@ -21,10 +22,12 @@ namespace WeatherForecastAPI.Controllers
     {
         private readonly WeatherContext _context;
         private readonly WeatherServices service;
+        private readonly ConverterService converter;
         public WeatherController(WeatherContext context)
         {
             _context = context;
-            service = new WeatherServices();
+            service = new WeatherServices(_context);
+            converter = new ConverterService();
         }
 
 
@@ -55,8 +58,23 @@ namespace WeatherForecastAPI.Controllers
                     Error = HandlingErrors.TimeSpanTooLong
                 });
             }
-            var forecasts = service.GetForecasts(fromDate, toDate, cityId, _context.Forecasts.ToList());
-            var actualTemperature = service.GetActualTemperatures(fromDate, toDate, cityId, _context.ActualTemperatures.ToList());
+
+            var userName = User.Claims.Single(a => a.Type == System.Security.Claims.ClaimTypes.NameIdentifier).Value;
+            var unit = _context.UserSettings.First(x => x.User == userName).Units;
+
+            var forecasts = service.GetForecasts(fromDate, toDate, cityId);
+            foreach(var item in forecasts)
+            {
+                item.Temperature = converter.ConvertetFromCelcius(item.Temperature, unit);
+            };
+
+
+            var actualTemperature = service.GetActualTemperatures(fromDate, toDate, cityId);
+            foreach(var item in actualTemperature)
+            {
+                item.Temperature = converter.ConvertetFromCelcius(item.Temperature, unit);
+            }
+
             var averageActualTemperature = actualTemperature.Average(i =>(double?) i.Temperature);
             var providers = service.GetProvidersWithStdevs(actualTemperature, forecasts, averageActualTemperature);
 
@@ -76,14 +94,6 @@ namespace WeatherForecastAPI.Controllers
                         provider.Stdevs.Remove(stdev);
                     }
                 }
-            }
-            if (allStdevs.Providers.Count == 0) 
-            {
-                Log.Error($"No stdev data was found for city with ID {cityId} within period {fromDate.Date} - {toDate.Date}");
-                return BadRequest(new ErrorHandlingModel
-                {
-                    Error = HandlingErrors.NoDataFound
-                });
             }
             return Ok(allStdevs);
         }
@@ -114,7 +124,15 @@ namespace WeatherForecastAPI.Controllers
                 });
             }
 
-            var cityAverageByDay = service.GetCityAverageByDay(fromDate, toDate, cityId, _context.Forecasts.ToList());
+            var cityAverageByDay = service.GetCityAverageByDay(fromDate, toDate, cityId);
+
+            var userName = User.Claims.Single(a => a.Type == System.Security.Claims.ClaimTypes.NameIdentifier).Value;
+            var unit = _context.UserSettings.First(x => x.User == userName).Units;
+
+            foreach (var item in cityAverageByDay)
+            {
+                item.Average = converter.ConvertetFromCelcius(item.Average, unit);
+            }
 
             var result = new WeatherCityAverage
             {
@@ -123,14 +141,6 @@ namespace WeatherForecastAPI.Controllers
                 ToDate = toDate.Date,
                 Average = cityAverageByDay
             };
-            if (result.Average.Count == 0)
-            {
-                Log.Error($"No averages found for city with ID {cityId} within period {fromDate.Date} - {toDate.Date}");
-                return BadRequest(new ErrorHandlingModel
-                {
-                    Error = HandlingErrors.NoDataFound
-                });
-            }
             return Ok(result);
         }
         /// <summary>
@@ -160,10 +170,24 @@ namespace WeatherForecastAPI.Controllers
                 });
             }
 
-            var providersWithForecasts = service.GetProvidersWithForecasts(fromDate, toDate, cityId, _context.Forecasts.ToList());
+            var providersWithForecasts = service.GetProvidersWithForecasts(fromDate, toDate, cityId);
 
-            var actualTemperature = service.GetActualTemperaturesTransformed(fromDate, toDate, cityId, _context.ActualTemperatures.ToList());
 
+            var userName = User.Claims.Single(a => a.Type == System.Security.Claims.ClaimTypes.NameIdentifier).Value;
+            var unit = _context.UserSettings.First(x => x.User == userName).Units;
+
+            var actualTemperature = service.GetActualTemperaturesTransformed(fromDate, toDate, cityId);
+            foreach(var actual in actualTemperature)
+            {
+                actual.Temperature = converter.ConvertetFromCelcius(actual.Temperature, unit);
+            }
+            foreach(var item in providersWithForecasts)
+            {
+                foreach(var forecast in item.Forcasts)
+                {
+                    forecast.Temperature = converter.ConvertetFromCelcius(forecast.Temperature, unit);
+                }
+            }
             var forecasts = new WeatherRawForecasts
             {
                 CityId = cityId,
@@ -171,15 +195,7 @@ namespace WeatherForecastAPI.Controllers
                 ToDate = toDate,
                 FactualTemperature = actualTemperature,
                 Providers = providersWithForecasts
-            };
-            if (forecasts.Providers.Count == 0)
-            {
-                Log.Error($"No raw data was found for city with ID {cityId} within period {fromDate.Date} - {toDate.Date}");
-                return BadRequest(new ErrorHandlingModel
-                {
-                    Error = HandlingErrors.NoDataFound
-                });
-            }            
+            };        
             return Ok(forecasts);
         }
     }

@@ -38,7 +38,7 @@ namespace WeatherForecastAPI.Controllers
         [ProducesResponseType(typeof(AuthSuccessResponse), 200)]
         [ProducesResponseType(typeof(LogInErrorsResponse), 401)]
         [ProducesResponseType(typeof(ErrorResponse), 400)]
-        public async Task<ActionResult> LoginAsync([FromBody] AuthAccount request)
+        public async Task<ActionResult> LoginAsync( AuthAccount request)
         {
             var authResponse = await service.LogIn(request.Email, request.Password);
 
@@ -62,7 +62,7 @@ namespace WeatherForecastAPI.Controllers
         [HttpPost("Refresh")]
         [ProducesResponseType(typeof(AuthSuccessResponse), 200)]
         [ProducesResponseType(typeof(TokenErrorsResponse), 400)]
-        public async Task<ActionResult> RefreshAsync([FromBody] RefreshTokenRequest request)
+        public async Task<ActionResult> RefreshAsync(RefreshTokenRequest request)
         {
             var authResponse = await service.RefreshTokenAsync(request.Token, request.RefreshToken);
 
@@ -87,7 +87,7 @@ namespace WeatherForecastAPI.Controllers
         [HttpPost("Registration")]
         [ProducesResponseType(typeof(AuthSuccessResponse), 200)]
         [ProducesResponseType(typeof(IdentityError), 400)]
-        public async Task<ActionResult> RegisterAsync([FromBody] AuthAccount request)
+        public async Task<ActionResult> RegisterAsync( AuthAccount request)
         {
             var result = await _userManager.CreateAsync(new IdentityUser
             {

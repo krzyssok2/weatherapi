@@ -7,8 +7,7 @@ namespace WeatherForecastAPI.Models.Swagger
 {
     public enum ErrorsWeather
     {
-        TimeSpanTooLong,
-        DataNotFound,
+        TimeSpanTooLong=0
     }
     public class WeatherErrorsResponse
     {

@@ -21,7 +21,7 @@ using System.Linq;
 using System.IO;
 using System;
 using WeatherForecastAPI.ErrorHandler;
-
+using WeatherForecastAPI.Models;
 namespace WeatherForecastAPI
 {
     public class Startup
@@ -63,7 +63,6 @@ namespace WeatherForecastAPI
             })
             .AddJwtBearer(x => 
             {
-                x.SaveToken = true;
                 x.TokenValidationParameters = tokenValidationParameters;
             });
 
@@ -71,23 +70,15 @@ namespace WeatherForecastAPI
             services.AddHttpClient("OWM", c =>
             {
                 c.BaseAddress = new Uri("http://api.openweathermap.org/data/2.5/");
-                //c.DefaultRequestHeaders.Add("");
-
             });
             services.AddHttpClient("METEO", c =>
             {
                 c.BaseAddress = new Uri("https://api.meteo.lt/v1/");
-                //c.DefaultRequestHeaders.Add("");
-
             });
             services.AddHttpClient("BBC", c =>
             {
-                c.BaseAddress = new Uri("https://weather-broker-cdn.api.bbci.co.uk/en/");
-                //c.DefaultRequestHeaders.Add("");
-
+                c.BaseAddress = new Uri("https://weather-broker-cdn.api.bbci.co.uk/en/");          
             });
-
-
 
             services.AddSwaggerGen(x =>
             {
@@ -117,15 +108,8 @@ namespace WeatherForecastAPI
                 };
 
                 x.AddSecurityDefinition(name: "Bearer", scheme);
-                //x.AddSecurityRequirement(new OpenApiSecurityRequirement
-                //{
-                //    {new OpenApiSecurityScheme{Reference = new OpenApiReference
-                //    {
-                //        Id = "Bearer",
-                //        Type = ReferenceType.SecurityScheme
-                //    }}, new List<string>()}
-                //});
-                x.OperationFilter<SecurityRequirementsOperationFilter>(true, scheme.Reference.Id);//Doesn't recognize bearer then
+     
+                x.OperationFilter<SecurityRequirementsOperationFilter>(true, scheme.Reference.Id);
 
             });
             
@@ -137,14 +121,18 @@ namespace WeatherForecastAPI
             services.AddScoped<IFetcher,OWMFetcher>();
             services.AddScoped<OWMActualFetcher>();
 
-            //Get List of all Ifetcher Interfaces
-            services.AddScoped<List<IFetcher>>();
-
             services.AddControllers()
                 .ConfigureApiBehaviorOptions(options=>
                 {
                     options.InvalidModelStateResponseFactory =
-                    c => new BadRequestObjectResult(new { Errors = c.ModelState.Values.SelectMany(x => x.Errors.Select(x => x.ErrorMessage)) });
+                    c => new BadRequestObjectResult(new ErrorResponse
+                    {
+                        Errors = c.ModelState.Select(errorDetails => new ErrorModel
+                        {
+                            FieldName = errorDetails.Key,
+                            ErrorType = errorDetails.Value.Errors.Select(x => (EnumErrors)Enum.Parse(typeof(EnumErrors), x.ErrorMessage, true)).ToList()
+                        }).ToList()
+                    });
                 })
                 .AddFluentValidation(mvcConfiguration => mvcConfiguration.RegisterValidatorsFromAssemblyContaining<Startup>())
                 .AddJsonOptions(opts =>
@@ -156,13 +144,6 @@ namespace WeatherForecastAPI
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-
-            //app.ConfigureExceptionHandler();
-
             app.UseMiddleware<ExceptionMiddleware>();
 
             app.UseSwagger();

@@ -7,7 +7,9 @@ namespace WeatherForecastAPI.Models
         //Starting from 0 breaks FluentValidator, can't set C then
         C=0,
         F=1,
-        K=2
+        K=2,
+        Ra=3,
+        Re=4,
     }
     public class UserAccount
     {

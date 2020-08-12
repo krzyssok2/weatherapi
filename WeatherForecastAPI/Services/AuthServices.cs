@@ -56,16 +56,16 @@ namespace WeatherForecastAPI.Services
                 return new AuthenticationResult(Errors.InvalidToken);
             }
 
-            var expiryDateUnix =
-                long.Parse(validatedToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Exp).Value);
+            //var expiryDateUnix =
+            //    long.Parse(validatedToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Exp).Value);
 
-            var expiryDateTimeUtc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
-                .AddSeconds(expiryDateUnix);
+            //var expiryDateTimeUtc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            //    .AddSeconds(expiryDateUnix);
 
-            if (expiryDateTimeUtc < DateTime.UtcNow)
-            {
-                return new AuthenticationResult(Errors.TokenExpired);
-            }
+            //if (expiryDateTimeUtc < DateTime.UtcNow)
+            //{
+            //    return new AuthenticationResult(Errors.TokenExpired);
+            //}
 
             var jti = validatedToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
 

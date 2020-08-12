@@ -33,7 +33,7 @@ namespace WeatherForecastAPI.Worker
             var context = scope.ServiceProvider.GetRequiredService<WeatherContext>();
             if (WasWeatherAlreadyFetced(context)) return;
 
-            var services = scope.ServiceProvider.GetRequiredService<List<IFetcher>>();
+            var services = scope.ServiceProvider.GetRequiredService<IEnumerable<IFetcher>>();
             var uniqueId = context.CityProviderID
                 .Include(i=>i.City)
                 .Include(i=>i.Provider)
@@ -126,7 +126,5 @@ namespace WeatherForecastAPI.Worker
         {
             _timer?.Dispose();
         }
-
-
     }
 }

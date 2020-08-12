@@ -25,7 +25,6 @@ namespace WeatherForecastAPI.Controllers
         /// </summary>
         [HttpGet]
         [ProducesResponseType(typeof(CitiesResponseModel), 200)]
-        [ProducesResponseType(typeof(CityErrorsResponse), 400)]
         public ActionResult<CitiesResponseModel> GetAllCities()
         {
             var allCities = new CitiesResponseModel
@@ -39,13 +38,6 @@ namespace WeatherForecastAPI.Controllers
                     ToDate = cityInfo.Forecasts.Max(i => i.ForecastTime)
                 }).ToList()
             };
-            if(allCities.Cities.Count()==0)
-            {
-                return BadRequest(new ErrorHandlingModel
-                {
-                    Error = HandlingErrors.NoDataFound
-                });
-            }
             return Ok(allCities);
         }
     }

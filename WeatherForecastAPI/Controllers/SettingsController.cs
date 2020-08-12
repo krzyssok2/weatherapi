@@ -32,7 +32,7 @@ namespace WeatherForecastAPI.Controllers
         {
             var prefferedCities = new AllPreferedCities();
 
-            var userName = User.Claims.Where(a => a.Type == System.Security.Claims.ClaimTypes.NameIdentifier).FirstOrDefault().Value;
+            var userName = User.Claims.Single(a => a.Type == System.Security.Claims.ClaimTypes.NameIdentifier).Value;
 
             var cities = service.GetPreferedCities(_context.FavoriteCities.Include(i=>i.City).Include(i=>i.User).ToList(), userName);
 
@@ -47,9 +47,9 @@ namespace WeatherForecastAPI.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpPut("favorite-cities")]
-        public ActionResult PutPreferedCities([FromBody] InsertCities insertCities)
+        public ActionResult PutPreferedCities( InsertCities insertCities)
         {
-            var userName = User.Claims.Where(a => a.Type == System.Security.Claims.ClaimTypes.NameIdentifier).FirstOrDefault().Value;
+            var userName = User.Claims.Single(a => a.Type == System.Security.Claims.ClaimTypes.NameIdentifier).Value;
             var settings = _context.UserSettings.Include(x => x.FavoriteCities).FirstOrDefault(x => x.User == userName);
 
             settings.FavoriteCities.Clear();
@@ -76,7 +76,7 @@ namespace WeatherForecastAPI.Controllers
         [ProducesResponseType(typeof(CityErrorsResponse), 400)]
         public ActionResult DeletePreferedCity(long CityId)
         {
-            var userId = User.Claims.Where(a => a.Type == System.Security.Claims.ClaimTypes.NameIdentifier).FirstOrDefault().Value;
+            var userId = User.Claims.Single(a => a.Type == System.Security.Claims.ClaimTypes.NameIdentifier).Value;
 
             var city = _context.Cities.Where(c => c.Id == CityId).FirstOrDefault();
             if (city == null)
@@ -102,7 +102,7 @@ namespace WeatherForecastAPI.Controllers
         [HttpGet("")]
         public ActionResult<Settings> GetAllSettings()
         {
-            var userName = User.Claims.Where(a => a.Type == System.Security.Claims.ClaimTypes.NameIdentifier).FirstOrDefault().Value;
+            var userName = User.Claims.Single(a => a.Type == System.Security.Claims.ClaimTypes.NameIdentifier).Value;
 
             Settings settings = _context.UserSettings
                 .Where(i => i.User == userName)
@@ -124,10 +124,12 @@ namespace WeatherForecastAPI.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpPut("")]
-        public ActionResult UpdateAllSettings([FromBody] InsertSettings insertSettings)
+        public ActionResult UpdateAllSettings( InsertSettings insertSettings)
         {
-            var userName = User.Claims.Where(a => a.Type == System.Security.Claims.ClaimTypes.NameIdentifier).FirstOrDefault().Value;
-            var settings = _context.UserSettings.Include(x => x.FavoriteCities).Include(i=>i.User).FirstOrDefault(x => x.User == userName);
+            var userName = User.Claims.Single(a => a.Type == System.Security.Claims.ClaimTypes.NameIdentifier).Value;
+            var settings = _context.UserSettings
+                .Include(x => x.FavoriteCities)
+                .FirstOrDefault(x => x.User == userName);
             settings.FavoriteCities.Clear();
 
             var cities = _context.Cities.ToList();
