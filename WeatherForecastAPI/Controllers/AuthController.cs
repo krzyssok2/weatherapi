@@ -15,18 +15,13 @@ namespace WeatherForecastAPI.Controllers
     public class AuthController : ControllerBase
     {
         private readonly UserManager<IdentityUser> _userManager;
-        private readonly JwtSettings _jwtSettings;
-        private readonly TokenValidationParameters _tokenValidationParameters;
         private readonly WeatherContext _context;
         private readonly AuthServices service;
-        public AuthController(UserManager<IdentityUser> identityService, SignInManager<IdentityUser> signInManager, 
-            JwtSettings jwtSettings,TokenValidationParameters tokenValidationParameters, WeatherContext weatherContext)
+        public AuthController(UserManager<IdentityUser> identityService ,WeatherContext weatherContext, AuthServices authservices)
         {
             _userManager = identityService;
-            _jwtSettings = jwtSettings;
-            _tokenValidationParameters = tokenValidationParameters;
             _context = weatherContext;
-            service = new AuthServices(_userManager, _jwtSettings, _tokenValidationParameters, _context);
+            service = authservices;
         }
         /// <summary>
         /// Log in user

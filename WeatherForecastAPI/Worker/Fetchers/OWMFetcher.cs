@@ -17,7 +17,7 @@ namespace WeatherForecastAPI.Worker
         public IHttpClientFactory _httpClientFactory;
         public async Task<ForecastGeneralized> GetData(string uniqueCityId, string cityName)
         {
-            OWMOneCallRootObject weatherinfo = await Deserialize<OWMOneCallRootObject>("OWM", string.Format("onecall?{0}&units=metric&appid=4bd458b0d9e2bfadbed92b6b73ce4274", uniqueCityId), false);
+            OWMOneCallRootObject weatherinfo = await Deserialize<OWMOneCallRootObject>("OWM", string.Format("onecall?{0}&units=metric&appid=4bd458b0d9e2bfadbed92b6b73ce4274", uniqueCityId));
             ForecastGeneralized forecastGeneralized = new ForecastGeneralized
             {
                 Name = cityName,
@@ -39,7 +39,7 @@ namespace WeatherForecastAPI.Worker
         }
 
 
-        async Task<T> Deserialize<T>(string provider, string path, bool IsXML)
+        async Task<T> Deserialize<T>(string provider, string path)
         {
             var client = _httpClientFactory.CreateClient(provider);
             var result = await client.GetStringAsync(path);

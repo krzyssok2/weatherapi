@@ -18,7 +18,7 @@ namespace WeatherForecastAPI.Worker
         public async Task<ForecastGeneralized> GetData(string uniqueCityId,string cityName)
         {
             MeteoRootObject weatherinfo =
-                await Deserialize<MeteoRootObject>("METEO", string.Format("places/{0}/forecasts/long-term", uniqueCityId), false);
+                await Deserialize<MeteoRootObject>("METEO", string.Format("places/{0}/forecasts/long-term", uniqueCityId));
             ForecastGeneralized forecastGeneralized = new ForecastGeneralized
             {
                 Name = weatherinfo.place.name.ToLower(),
@@ -38,7 +38,7 @@ namespace WeatherForecastAPI.Worker
             return forecastGeneralized;
         }
 
-        async Task<T> Deserialize<T>(string provider, string path, bool IsXML)
+        async Task<T> Deserialize<T>(string provider, string path)
         {
             var client = _httpClientFactory.CreateClient(provider);
             var result = await client.GetStringAsync(path);

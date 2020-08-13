@@ -13,7 +13,6 @@ namespace WeatherApiUnitTesting
 
         public ServicesTests()
         {
-            _sut = new WeatherServices();
         }
 
         [Fact]

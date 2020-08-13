@@ -23,11 +23,11 @@ namespace WeatherForecastAPI.Controllers
         private readonly WeatherContext _context;
         private readonly WeatherServices service;
         private readonly ConverterService converter;
-        public WeatherController(WeatherContext context)
+        public WeatherController(WeatherContext context, ConverterService converterService)
         {
             _context = context;
             service = new WeatherServices(_context);
-            converter = new ConverterService();
+            converter = converterService;
         }
 
 

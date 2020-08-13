@@ -22,6 +22,8 @@ using System.IO;
 using System;
 using WeatherForecastAPI.ErrorHandler;
 using WeatherForecastAPI.Models;
+using WeatherForecastAPI.Services;
+
 namespace WeatherForecastAPI
 {
     public class Startup
@@ -66,6 +68,8 @@ namespace WeatherForecastAPI
                 x.TokenValidationParameters = tokenValidationParameters;
             });
 
+
+
             //Add httpclinet for providers
             services.AddHttpClient("OWM", c =>
             {
@@ -77,7 +81,7 @@ namespace WeatherForecastAPI
             });
             services.AddHttpClient("BBC", c =>
             {
-                c.BaseAddress = new Uri("https://weather-broker-cdn.api.bbci.co.uk/en/");          
+                c.BaseAddress = new Uri("https://weather-broker-cdn.api.bbci.co.uk/en/");      
             });
 
             services.AddSwaggerGen(x =>
@@ -139,6 +143,12 @@ namespace WeatherForecastAPI
                 {
                     opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 });
+
+
+            services.AddScoped<AuthServices>();
+            services.AddScoped<ConverterService>();
+            services.AddScoped<SettingsServices>();
+            services.AddScoped<WeatherServices>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

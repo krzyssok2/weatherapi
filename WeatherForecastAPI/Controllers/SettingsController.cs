@@ -17,10 +17,10 @@ namespace WeatherForecastAPI.Controllers
     {
         private readonly WeatherContext _context;
         private readonly SettingsServices service;
-        public SettingsController(WeatherContext context)
+        public SettingsController(WeatherContext context, SettingsServices settingservices)
         {
             _context = context;
-            service = new SettingsServices();
+            service = settingservices;
         }
 
         /// <summary>
