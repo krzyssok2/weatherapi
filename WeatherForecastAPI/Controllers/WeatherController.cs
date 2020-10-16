@@ -17,7 +17,7 @@ namespace WeatherForecastAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class WeatherController : ControllerBase
     {
         private readonly WeatherContext _context;
@@ -173,9 +173,9 @@ namespace WeatherForecastAPI.Controllers
             var providersWithForecasts = service.GetProvidersWithForecasts(fromDate, toDate, cityId);
 
 
-            var userName = User.Claims.Single(a => a.Type == System.Security.Claims.ClaimTypes.NameIdentifier).Value;
-            var unit = _context.UserSettings.First(x => x.User == userName).Units;
-
+            //var userName = User.Claims.Single(a => a.Type == System.Security.Claims.ClaimTypes.NameIdentifier).Value;
+            //var unit = _context.UserSettings.First(x => x.User == userName).Units;
+            var unit = Temperature.C;
             var actualTemperature = service.GetActualTemperaturesTransformed(fromDate, toDate, cityId);
             foreach(var actual in actualTemperature)
             {

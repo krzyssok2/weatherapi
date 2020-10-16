@@ -134,8 +134,7 @@ namespace WeatherForecastAPI.Services
         }
 
         private async Task<AuthenticationResult> GenerateAuthenticationResultForUserAsync(IdentityUser user)
-        {
-            var tokenHandler = new JwtSecurityTokenHandler();
+        {            
             var key = Encoding.ASCII.GetBytes(_jwtSettings.Secret);
 
             var claims = new List<Claim>
@@ -154,8 +153,8 @@ namespace WeatherForecastAPI.Services
                     new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
+            var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
-
             var refreshToken = new RefreshToken
             {
                 JwtId = token.Id,
@@ -163,7 +162,6 @@ namespace WeatherForecastAPI.Services
                 CreationDate = DateTime.UtcNow,
                 ExpiryDate = DateTime.UtcNow.AddMonths(6)
             };
-
             await _context.RefreshTokens.AddAsync(refreshToken);
             await _context.SaveChangesAsync();
 

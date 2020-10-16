@@ -30,7 +30,7 @@ namespace WeatherForecastAPI.Worker
             {
                 Name = weatherinfo.data.location.name.ToLower(),
                 Provider = "BBC",
-                CreationDate = Convert.ToDateTime(DateTime.Now.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss")),
+                CreationDate = DateTime.Now,
                 Forecasts = new List<ForecastsG>()
             };
             foreach (var day in weatherinfo.data.forecasts.Take(7))

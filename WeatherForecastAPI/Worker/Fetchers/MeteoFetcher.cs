@@ -23,7 +23,7 @@ namespace WeatherForecastAPI.Worker
             {
                 Name = weatherinfo.place.name.ToLower(),
                 Provider = "Meteo",
-                CreationDate = Convert.ToDateTime(DateTime.Now.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss")),
+                CreationDate = DateTime.Now,
                 Forecasts = new List<ForecastsG>()
             };
             foreach (var forecast in weatherinfo.forecastTimestamps)

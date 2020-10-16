@@ -21,7 +21,7 @@ namespace WeatherForecastAPI.Worker
             ForecastGeneralized forecastGeneralized = new ForecastGeneralized
             {
                 Name = cityName,
-                CreationDate = Convert.ToDateTime(DateTime.Now.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss")),
+                CreationDate = DateTime.Now,
                 Provider = "OWM",
                 Forecasts = new List<ForecastsG>()
             };
